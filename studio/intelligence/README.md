@@ -1,22 +1,43 @@
-# Official Site Intelligence
+# Official Project Intelligence
 
-PawanStudio can ingest a project's official website once and maintain a cached site-intelligence pack. The pack contains page evidence, headings/claims, discovered first-party images/videos/icons, source URLs and a strict authenticity policy.
+PawanStudio does not require a website URL for every project.
 
-## Workflow
+## Default behavior
 
-1. User enters the project's official URL once.
-2. Studio crawls the configured origin and approved paths only.
-3. It discovers product pages, blog/docs/FAQ pages and first-party assets.
-4. It caches the evidence/asset pack under Studio storage.
-5. Creative planning can select official logos, product UI and announcements automatically.
-6. Before a time-sensitive production, refresh the pack so changed pages/assets are re-ingested.
+User can simply say:
 
-## Guarantees
+`Make a video about <project>.`
 
-- No cross-domain asset is silently accepted as official.
-- Official logo/product proof is preferred over stock or generated media.
-- Generated conceptual visuals are never labeled as official product UI.
-- Every discovered asset carries its source page and URL for provenance.
-- The system is reusable across projects; only the official origin and approved paths change.
+The discovery/research adapter searches for the project's official identity and candidate first-party sources. Candidates are ranked but **never treated as authoritative until verified**.
 
-For Sats Terminal, configure `https://www.satsterminal.com` and paths such as `/`, `/blog`, `/borrow`, `/borrow/faq`, and `/borrow/learn`.
+If identity confidence is high, the Studio can build/reuse a project knowledge pack automatically. If identity is ambiguous, it asks the user for a seed URL.
+
+A URL supplied by the user remains a preferred seed, not a mandatory requirement.
+
+## Source hierarchy
+
+1. Official website/product pages
+2. Official documentation
+3. Official GitHub
+4. Official blog/announcements
+5. Official X/social accounts
+6. Primary data
+7. Independent sources for context/corroboration
+
+## Asset hierarchy
+
+Official verified logo/UI/announcement/image/video > licensed real media > public-domain media > conceptual generated media.
+
+Generated media must never impersonate an official product interface, logo, announcement, balance, rate, chart or other product-of-record artifact.
+
+## Project memory
+
+The verified source pack and asset vault are reusable per project. Subsequent videos can say only the project name and reuse the approved knowledge/assets. Before production, the pack can be refreshed and changed claims/assets can invalidate only affected scenes where possible.
+
+## Refresh
+
+Recommended default: refresh official sources before each production for time-sensitive projects; otherwise use the cached pack until its configured age expires.
+
+## Required external adapter
+
+`official_discovery.py` is the deterministic core. A browser/search adapter is responsible for live discovery, crawling public pages, extracting assets, following same-site links and verifying official identity. It must write verified `OfficialSource` and `AssetRecord` objects into `ProjectMemory`.
