@@ -1,0 +1,34 @@
+{
+  "project": {
+    "name": "Sats Terminal",
+    "website": "https://www.satsterminal.com/",
+    "logo": "projects/sats-terminal/assets/logo.png",
+    "brand": {
+      "primary": "#111111",
+      "accent": "#18C77A",
+      "background": "#FFFFFF"
+    }
+  },
+  "resolution": [1080, 1920],
+  "fps": 30,
+  "seed": 20260828,
+  "default_scene_duration": 4.5,
+  "audio": "projects/sats-terminal/audio/narration.mp3",
+  "subtitle": "projects/sats-terminal/audio/subtitle.srt",
+  "enhanced_subtitle": "projects/sats-terminal/audio/subtitle_enhanced.json",
+  "subtitles": {
+    "font_size": 52,
+    "bottom_margin": 125,
+    "font_path": null
+  },
+  "scenes": [
+    {"asset":"projects/sats-terminal/assets/official/homepage.png","duration":4.5,"camera":"push_in","transition":"fade"},
+    {"asset":"projects/sats-terminal/assets/official/borrow.png","duration":5.0,"camera":"pan_left","transition":"fade"},
+    {"asset":"projects/sats-terminal/assets/official/send-bitcoin.png","duration":5.0,"camera":"drift_right","transition":"fade"},
+    {"asset":"projects/sats-terminal/assets/official/receive-stablecoins.png","duration":5.0,"camera":"pan_up","transition":"fade"},
+    {"asset":"projects/sats-terminal/assets/official/manage-loan.png","duration":5.0,"camera":"push_in","transition":"fade"},
+    {"asset":"projects/sats-terminal/assets/concept/bitcoin-liquidity.mp4","duration":4.5,"camera":"drift_left","transition":"fade"},
+    {"asset":"projects/sats-terminal/assets/official/liquidity-marketplace.png","duration":4.5,"camera":"pull_out","transition":"fade"},
+    {"asset":"projects/sats-terminal/assets/logo.png","duration":4.0,"camera":"center","transition":"fade"}
+  ]
+}
