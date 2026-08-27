@@ -1,0 +1,25 @@
+{
+  "schema_version":"1.0",
+  "fail_fast":false,
+  "checks": {
+    "technical":["resolution_matches_format","fps_valid","codec_valid","duration_valid","audio_stream_present"],
+    "visual":["black_bar_detection","pillarbox_detection","text_safe_area","caption_collision","ui_readability","excessive_text_coverage","duplicate_scene_detection","missing_asset_detection"],
+    "audio":["peak_level","loudness","voice_music_balance","silence_gaps","caption_audio_sync","clipping"],
+    "story":["first_three_seconds_hook","visual_variety","pattern_break_frequency","cta_present","payoff_present"],
+    "trust":["official_asset_check","source_claim_check","license_provenance","ai_visual_disclosure_when_needed","launch_date_verification"],
+    "accessibility":["caption_contrast","caption_readability","speaker_identification","safe_area_for_platform"]
+  },
+  "thresholds": {
+    "max_text_coverage":0.28,
+    "min_ui_readability_score":0.75,
+    "max_silence_seconds":1.2,
+    "max_true_peak_db":-1.0,
+    "caption_sync_tolerance_ms":120
+  },
+  "actions":[
+    "warn_and_suggest_fix",
+    "auto_recompose_if_safe",
+    "rerender_failed_scene",
+    "block_master_on_trust_failure"
+  ]
+}
