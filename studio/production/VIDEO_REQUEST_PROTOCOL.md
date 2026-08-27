@@ -1,139 +1,55 @@
 # PawanStudio Video Request Protocol
 
-## Purpose
+This is the mandatory operating contract for every future video request.
 
-This is the mandatory operating contract for every future video request. A request such as "make a video", "create a video for X", or an equivalent request MUST be treated as a production job, not as permission to immediately render a draft.
+## 1. Rules first
+Before planning or rendering, load and enforce the current PawanStudio master specification, skill catalog, production pipeline, asset-authenticity policy, creator-identity policy, QC gates, self-healing policy, and project-specific rules. If applicable rules cannot be loaded, BLOCK the job. Never silently fall back to the old slideshow pipeline.
 
-## 1. Read the Studio rules first
+## 2. Project understanding
+For each project: resolve official website and first-party sources; inspect official pages, docs, FAQ, blog, announcements, product pages and official social/technical sources when available; build a project brief, terminology map, claims/evidence ledger and official-asset registry; prefer current primary sources; block unsupported/stale claims.
 
-Before planning or rendering, the runtime MUST load and enforce the current PawanStudio master specification, skill catalog, production pipeline, asset-authenticity policy, creator-identity policy, QC gates, self-healing policy, and project-specific rules.
+## 2A. STRICT OFFICIAL-ASSET RULE
+For branded projects with a publicly accessible official website or first-party product pages, the runtime MUST retrieve/capture required official visual material itself through the configured browser/research/asset adapter BEFORE rendering.
 
-If the runtime cannot load the applicable rules, the job is BLOCKED. It must not silently fall back to the old MoneyPrinterTurbo slideshow pipeline.
+User-uploaded screenshots, screenshots found in chat history, or previously generated project images MUST NOT be silently substituted when an official equivalent is available. They may be used only when the user explicitly requests them, or when they are the user's own creator material rather than project/product material.
 
-## 2. Understand the project before making the video
+Every official product asset in the final timeline MUST have an asset-registry record containing source URL, retrieval timestamp, source type, asset role and provenance status. Final QC MUST verify that each timeline asset matches a registered source asset.
 
-For each project, the Studio MUST:
+If an official asset is required but cannot be retrieved/verified, production MUST be BLOCKED or use a clearly non-official conceptual treatment. It MUST NOT fabricate an official-looking substitute and MUST NOT silently fall back to a user screenshot.
 
-1. Resolve the official website and first-party sources.
-2. Inspect official pages, documentation, FAQ, blog, announcements, product pages and official social/technical sources when available.
-3. Build a project brief, terminology map, claims/evidence ledger and official-asset registry.
-4. Prefer current primary sources over secondary summaries.
-5. Mark unsupported or stale claims as blocked rather than inventing facts.
-
-The user should not have to repeatedly supply screenshots when equivalent official material is publicly accessible and legally retrievable by the configured research/asset adapters.
-
-## 3. Asset authenticity is mandatory
-
-For branded/project videos:
-
-- Official logo: use the verified original asset.
-- Official UI/product page: use authentic captured/retrieved material.
-- Official charts/data: reproduce only from verified data.
-- Official announcement: use the real source when it is the evidence.
-- Conceptual AI visuals: allowed only when clearly representing an idea rather than pretending to be official product material.
-- Fabricated official-looking logos, dashboards, balances, rates, product screens or announcements: BLOCK.
-- User-provided creator identity assets remain the canonical identity source.
-
-The Studio MUST keep asset provenance metadata so the final QC can explain where material came from.
+## 3. Authenticity
+Official logo/UI/charts/data/announcements must use verified originals. Conceptual AI visuals are allowed only when clearly conceptual and not presented as official product material. Fabricated official-looking logos, dashboards, balances, rates, product screens or announcements are BLOCKED. Keep provenance metadata.
 
 ## 4. Creator identity
-
-If the user has supplied an authorized photo/video/voice profile:
-
-- preserve the user's identity;
-- use the original authorized source as the identity anchor;
-- allow professional enhancement, framing, cleanup, wardrobe/styling and contextual placement only when the workflow supports it;
-- do not silently replace the user with another face;
-- do not silently substitute a synthetic voice for the user's authorized voice;
-- if a synthetic transformation is explicitly requested, mark it as synthetic in internal provenance and subject it to the same QC.
-
-The Studio must choose intelligently between presenter footage, creator photo, voice-over, product visuals and no-presenter scenes. The creator must not be pasted into every scene merely for decoration.
+If an authorized creator photo/video/voice exists, preserve identity and use the authorized source as the identity anchor. Professional enhancement, framing, cleanup, wardrobe/styling and contextual placement are allowed when supported. Never silently replace the creator with another face or synthetic voice. Choose presenter/photo/voice-over/product-only scenes intelligently; do not paste the creator everywhere.
 
 ## 5. Creative direction
-
-The Studio MUST NOT default to:
-
-`topic -> stock keywords -> photos -> TTS -> captions -> slideshow`.
-
-It MUST first generate and score multiple concepts using:
-
-- originality;
-- project relevance;
-- evidence potential;
-- visual potential;
-- narrative strength;
-- retention potential;
-- creator fit;
-- platform fit.
-
-It should identify common/overused treatments where the configured research/reference adapters permit it, then deliberately choose a differentiated visual and narrative treatment.
+Never default to `topic -> stock keywords -> photos -> TTS -> captions -> slideshow`. Generate and score multiple concepts on originality, project relevance, evidence, visual potential, narrative strength, retention, creator fit and platform fit. Identify overused treatments when reference/research adapters permit and deliberately choose a differentiated treatment.
 
 ## 6. Production
+Normal path: rules -> project discovery -> research -> evidence -> thesis -> story -> differentiation -> visual language -> storyboard -> shot plan -> authentic assets -> creator media -> narration -> captions -> motion -> sound -> edit -> render -> forensic QC -> self-heal -> rerender -> complete QC -> delivery.
 
-The normal production path is:
+The renderer must use purposeful motion, camera language, compositing, diagrams, UI demonstrations, graphics, B-roll and multiple subtitle styles. A still-image slideshow is a QC failure unless explicitly requested by the format.
 
-`rules -> project discovery -> research -> evidence -> thesis -> story -> differentiation -> visual language -> storyboard -> shot plan -> authentic assets -> creator media -> narration -> captions -> motion -> sound -> edit -> render -> forensic QC -> self-heal -> rerender -> complete QC -> delivery`.
+## 7. Mandatory final inspection
+NO video may be delivered merely because rendering succeeds. Final artifact MUST pass all applicable gates: technical integrity; resolution/aspect/FPS/duration; black/frozen-frame checks; available visual anomaly/flicker/warping checks; creator identity/provenance; official product/logo/UI authenticity; claim/evidence verification; narration/pronunciation checks; audio clipping/noise/silence/loudness; subtitle timing/spelling/safe-area/overflow/collision; narration-to-visual correspondence; pacing/dead sections; repetitive-shot/slideshow detection; creative differentiation; asset provenance/licensing metadata; platform requirements.
 
-The renderer must support purposeful motion, camera language, compositing, diagrams, UI demonstrations, graphics, B-roll and multiple subtitle styles. A still-image slideshow is a QC failure unless the format itself explicitly calls for a slideshow.
+Missing analysis MUST NOT be treated as PASS. A required gate with no executable analyzer is BLOCKED until the adapter exists or the requirement is explicitly inapplicable.
 
-## 7. Mandatory pre-delivery inspection
+## 8. Mandatory self-healing
+On any failure: identify exact stage/scene/asset/artifact; generate targeted repair plan; apply repair; rerender/reanalyse affected material; run the COMPLETE applicable QC suite again; repeat until PASS or configured safety/retry budget is exhausted. Never deliver a known-failing artifact. If unresolved, final state is BLOCKED with a machine-readable failure report.
 
-NO video may be delivered merely because the renderer exits successfully.
+## 9. Delivery evidence
+A delivered video must include final QC status, detected issues, fixes applied, source/provenance summary, render/version identifier and non-blocking caveats. Never claim checked/rendered/repaired/passed without runtime evidence.
 
-The final artifact MUST pass every applicable gate:
-
-- technical integrity;
-- aspect ratio/resolution/FPS/duration;
-- black-frame and frozen-frame detection;
-- visual anomaly/flicker/warping checks available to the runtime;
-- creator identity/provenance;
-- official product/logo/UI authenticity;
-- claim/evidence verification;
-- narration quality and pronunciation checks available to the runtime;
-- audio clipping/noise/silence/loudness checks;
-- subtitle timing/spelling/safe-area/overflow/collision checks;
-- narration-to-visual correspondence;
-- pacing and dead-section checks;
-- repetitive-shot/slideshow checks;
-- creative differentiation;
-- asset provenance/licensing metadata;
-- platform/export requirements.
-
-Missing analysis MUST NOT be treated as PASS. A required gate with no executable analyzer is BLOCKED until the appropriate adapter is available or the requirement is explicitly inapplicable.
-
-## 8. Self-healing is mandatory
-
-When any gate fails:
-
-1. Identify the exact failing stage, scene, asset or artifact.
-2. Generate a targeted repair plan.
-3. Apply the repair.
-4. Re-render/re-analyse the affected material.
-5. Run the COMPLETE applicable QC suite again, not only the failed test.
-6. Repeat until PASS or until the configured retry/safety budget is exhausted.
-
-The Studio MUST NOT deliver a known-failing artifact because it ran out of time or because another test passed.
-
-If healing cannot resolve a blocking issue, final state is `BLOCKED`, with a machine-readable failure report explaining what is missing.
-
-## 9. Human-facing delivery contract
-
-When a video is presented to the user, the Studio MUST provide:
-
-- final video artifact;
-- final QC status;
-- issues detected;
-- fixes applied;
-- source/provenance summary;
-- render/version identifier;
-- any remaining non-blocking caveats.
-
-The assistant MUST NOT claim that a video was checked, rendered, repaired, or passed QC unless the runtime actually produced evidence for that claim.
-
-## 10. Project-specific rules override generic defaults
-
-If the user says, for example, "use only official Sats Terminal assets", that becomes a hard project constraint. The Studio must merge user constraints with the global rules and fail closed on conflicts.
+## 10. Project rules
+User project constraints override generic defaults. Example: "use only official Sats Terminal assets" is a hard constraint. Merge constraints and fail closed on conflicts.
 
 ## 11. No premature delivery
+Drafts/previews only when explicitly requested. A normal video request means continue through production and QC until genuinely ready or report a blocking runtime dependency. Never label an unverified draft final.
 
-A draft, preview or render test may be shown only when explicitly requested as a draft. A normal "make a video" request means: continue through production and QC until the final artifact is genuinely ready, or report a blocking runtime dependency. Never label an unverified draft as final.
+## 12. Release rule for official screenshots
+For any project such as Sats Terminal, the production manifest MUST distinguish `official_source_asset`, `user_creator_asset`, and `conceptual_asset`. The final timeline may contain a product screenshot only if its manifest entry is `official_source_asset` with a verified first-party URL. A file originating from conversation uploads MUST be rejected as a product screenshot unless the user explicitly authorizes that exact file. QC must compare the final media hash/reference against the manifest and fail on mismatch.
+
+## 13. Video-request execution contract
+Whenever the user asks to make a video, the runtime MUST execute the complete pipeline and MUST NOT stop after generating a storyboard or draft. It must inspect its own rendered output before delivery. If any issue is found, it must self-heal and repeat the complete QC cycle. Delivery is permitted only after an evidenced PASS.
