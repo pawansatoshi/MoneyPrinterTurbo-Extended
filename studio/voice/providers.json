@@ -1,0 +1,24 @@
+{
+  "schema_version":"1.0",
+  "default":"chatterbox",
+  "providers": {
+    "chatterbox": {"kind":"local_command","command":"python -m chatterbox_tts","optional":true,"features":["natural_voice","expressive","voice_clone_with_consent","emotion"]},
+    "kokoro": {"kind":"local_command","command":"python -m kokoro_tts","optional":true,"features":["natural_voice","fast_local","multi_voice"]},
+    "piper": {"kind":"local_command","command":"python -m piper","optional":true,"features":["offline","lightweight","fallback"]},
+    "external": {"kind":"adapter","command":null,"optional":true,"features":["provider_defined"]}
+  },
+  "policy": {
+    "require_consent_for_voice_cloning": true,
+    "never_clone_public_figure_without_permission": true,
+    "store_voice_provenance": true,
+    "allow_external_provider": true
+  },
+  "render_controls": {
+    "pace": ["slow","medium","fast","custom"],
+    "emotion": ["neutral","confident","warm","excited","serious","documentary"],
+    "emphasis": true,
+    "pause_insertion": true,
+    "pronunciation_dictionary": true,
+    "duck_music_under_voice": true
+  }
+}
