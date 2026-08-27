@@ -2,78 +2,68 @@
 
 Pawan Video Studio is the reusable creative-production layer above MoneyPrinterTurbo. Projects change; the production system stays.
 
-## What is now covered
+## Implemented production system
 
 ### Creative directors
-
-- Cinematic
-- Product Demo
-- Tech Explainer
-- Documentary
-- Launch / Hype
-- News
-- Talking Head
-- Podcast
-- Motion Graphics
-- Gaming / High Energy
-- Shorts / Reels
-- Localization
-
-Directors can be mixed. A project can use `product_demo + cinematic + shorts` without changing renderer code.
+Cinematic, product demo, tech explainer, documentary, launch/hype, news, talking head, podcast, motion graphics, gaming/high-energy, Shorts/Reels and localization. Directors are composable and project-independent.
 
 ### Visual language
-
-The Studio distinguishes four layers:
-
-1. **Product proof** — authentic screenshots, recordings and official logos.
-2. **Conceptual B-roll** — licensed/public-domain footage or clearly conceptual AI visuals.
-3. **Editorial typography** — hooks, statistics, quotes and CTAs.
-4. **Narration captions** — accessible speech captions, independently styled and timed.
-
-A product claim must not be represented by fabricated UI.
+The Studio separates product proof, conceptual B-roll, editorial typography and narration captions. Authentic project screenshots, recordings and official logos are preferred for product claims; fabricated product UI is prohibited.
 
 ### Camera / editing vocabulary
+Push/pull, pans, drift, parallax intent, macro/UI focus intent, subject-follow intent, beat zoom intent, match cuts, whip cuts, crossfades, punch-ins, freeze frames, montage, J/L-cut concepts, pattern breaks and loop endings are represented in the production model. The planner normalizes executable camera primitives while retaining semantic camera intent.
 
-Push, pull, pan, drift, parallax, macro UI push, subject follow, UI-region follow, simulated rack focus, beat zoom, whip transitions, match cuts, mask reveals, speed ramps, J/L cuts, punch-ins, freeze frames, montages and loop endings are part of the reusable vocabulary.
+### Product UI
+Scenes can carry semantic UI-region intent such as headline, amount, collateral, LTV, rate, chart, health and CTA. Product screenshots remain source assets rather than being regenerated as fake UI.
 
-### Product UI engine
+### Subtitles
+Sentence, phrase, word, karaoke, character and automatic timing are supported. The preset registry includes clean/premium, word-pop, phrase-pop, kinetic, bounce, typewriter, highlight, outline, shadow, lower-third, speaker label, dual-language, emphasis, minimal, social-bold, news, technical and comic families. Safe-area and two-line constraints are enforced by the renderer.
 
-Product assets can be treated as semantic objects with regions such as `headline`, `borrow_amount`, `collateral`, `ltv`, `rate`, `cta`, `chart`, and `loan_health`. The creative planner can direct the camera to a region instead of moving a screenshot randomly.
+### Voice
+`studio/voice/providers.json` is provider-neutral. Chatterbox is the preferred expressive local provider, Kokoro is a fast local alternative, and Piper is a lightweight fallback. `studio/voice/runtime.py` provides the executable adapter contract and writes voice provenance metadata. Provider/model installation remains environment-specific; model weights are intentionally not committed to Git.
 
-### Subtitle engine
-
-Subtitle timing supports sentence, phrase, word, karaoke, character and automatic selection. Visual families include clean, premium/minimal, word-pop, phrase-pop, kinetic, bounce, typewriter, highlight, outline, shadow, lower-third, speaker label, dual-language, emphasis, social-bold, news, technical and comic. These are composable with animation, anchor, safe-area and emphasis rules.
-
-### Voice engine
-
-`studio/voice/providers.json` defines a provider-neutral interface with Chatterbox as the preferred local expressive provider, Kokoro as a fast local alternative and Piper as a lightweight fallback. Voice cloning requires consent and provenance. The repository does not embed third-party model weights.
-
-### Media and provenance
-
-`studio/media/sources.json` defines adapters for Pexels, Pixabay, Wikimedia, Internet Archive, NASA and AI-generated conceptual media. Each external asset should retain source URL, retrieval date, license, commercial-use status, attribution and provenance.
+### Media
+`studio/media/sources.json` defines official-first, user asset, licensed stock, public-domain/archive, NASA/Wikimedia and AI-conceptual source classes with per-asset provenance requirements.
 
 ### Audio
-
-The production model includes natural voice, pacing, pauses, emphasis, pronunciation dictionaries, music beds, voice ducking, UI clicks, whooshes, impacts, risers, ambience, room tone, silence cleanup and loudness normalization.
+The production model supports natural narration, pacing, pauses, emphasis, pronunciation dictionaries, music beds, voice ducking, UI clicks, whooshes, impacts, risers, ambience, room tone, silence cleanup and loudness normalization.
 
 ### Structured production plan
+`production.schema.json` is the contract between planning and rendering. `studio/pipeline.py` now orchestrates preflight → creative plan → render → technical QC.
 
-`production.schema.json` is the contract between the creative planner and renderer. A scene can specify asset, camera, transition, motion graphics, callouts and caption mode. This makes the system deterministic, editable and reusable.
+### Quality gate
+`studio/qc/preflight.py` blocks invalid manifests before rendering. `studio/qc/check.py` validates the rendered master for video/audio streams, duration, dimensions/aspect ratio and FPS. The existing rules registry remains the source for additional visual, audio, trust and accessibility checks.
 
-### Quality director
+## Commands
 
-`qc/rules.json` defines technical, visual, audio, story, trust and accessibility checks. Trust checks include official-asset validation, source-claim validation, license provenance and launch-date verification. A failed trust check should block the master.
-
-## Project model
-
-A project supplies a manifest, assets, narration/audio and optional word-level transcript. The Studio should never require project-specific renderer code.
-
-## Example
+Preflight:
 
 ```bash
-python -m studio.render project.json --output storage/studio/final.mp4
+python -m studio.qc.preflight studio/project.template.json
 ```
 
-## Roadmap
+Render + technical QC:
 
-The architecture is in place for the next implementation layers: provider adapters, semantic UI-region detection, free-media retrieval, AI B-roll adapters, motion-graphics rendering, automatic story/shot planning, full QC execution and multi-format reframe rendering. These integrations remain optional so the core Studio continues to run without external paid services or model weights.
+```bash
+python -m studio.pipeline studio/project.template.json --output storage/studio/final.mp4
+```
+
+Direct renderer:
+
+```bash
+python -m studio.render studio/project.template.json --output storage/studio/final.mp4
+```
+
+TTS adapter:
+
+```bash
+python -m studio.voice.runtime chatterbox narration.txt assets/audio/narration.wav
+```
+
+## Output formats
+
+Projects are format-aware: **16:9**, **9:16** and **1:1**. The standard YouTube/master template is **1920×1080, 30 FPS**. Reels/Shorts and square variants are selected through the project manifest rather than changing renderer code.
+
+## Important boundary
+
+The Studio is now the reusable production architecture, but external capabilities are intentionally adapters: TTS models, stock APIs, AI-video/image models and advanced computer-vision detectors must be installed or configured in the execution environment. The repository does not pretend those third-party runtimes are present when they are not.
