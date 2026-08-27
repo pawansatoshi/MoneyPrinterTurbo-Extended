@@ -1,0 +1,14 @@
+version: 1
+pipelines:
+  educational: [context,research,evidence,thesis,story,visual_grammar,storyboard,assets,voice,captions,edit,compose,review,revise,post_review]
+  product_demo: [context,research,evidence,story,product_authenticity,ui_capture,storyboard,assets,voice,captions,edit,compose,review,revise,post_review]
+  documentary: [context,research,evidence,story,archive_retrieval,footage_select,storyboard,voice,captions,edit,compose,review,revise,post_review]
+  talking_head: [context,script,creator_consent,transcribe,edit_speech,broll,graphics,voiceover_if_needed,captions,compose,review,revise,post_review]
+  podcast: [context,transcribe,highlight_select,clip_story,broll,captions,graphics,compose,review,revise,post_review]
+  launch: [context,research,evidence,hook,thesis,hero_concept,product_authenticity,storyboard,assets,voice,motion,audio,compose,review,revise,post_review]
+  shorts: [context,source_master,extract_rehook,storyboard,reframe,assets,captions,motion,audio,compose,review,revise,post_review]
+  localization: [context,source_master,translate,voiceover,timing,caption_localize,reframe,compose,review,post_review]
+  comparison: [context,research,evidence,criteria,story,visualize,assets,voice,captions,compose,review,revise,post_review]
+  news: [context,research,evidence,freshness_check,story,source_cards,visualize,voice,captions,compose,review,revise,post_review]
+  tutorial: [context,research,script,screen_capture,callouts,voice,captions,chaptering,compose,review,revise,post_review]
+  review: [context,research,evidence,criteria,testing,story,assets,voice,captions,compose,review,revise,post_review]
