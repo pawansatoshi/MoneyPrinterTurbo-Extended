@@ -1,51 +1,72 @@
 # Pawan Video Studio
 
-This repository is no longer treated as a one-off MoneyPrinterTurbo fork. The `studio/` layer is the reusable production system: projects change, the rendering engine stays.
+Pawan Video Studio is the reusable creative-production layer above MoneyPrinterTurbo. Projects change; the production system stays.
 
-## Design principles
+## What is now covered
 
-- **Project-agnostic:** Sats Terminal, YeBlock, XREIGN, or a future project are data/config only.
-- **Authentic product UI first:** official screenshots, screen recordings and logos are treated as source assets. The engine never fabricates a product dashboard.
-- **Dynamic subtitles:** safe-area, maximum two lines, compact rounded caption cards, and optional word-timing data from the existing enhanced subtitle pipeline.
-- **Dynamic camera:** every scene can use `push_in`, `pull_out`, `pan_left`, `pan_right`, `pan_up`, `pan_down`, `drift_*`, `center`, or `auto`.
-- **Deterministic randomness:** `seed` lets us reproduce a cut; changing the seed generates a different camera sequence without changing the project.
-- **Format-aware:** 9:16, 16:9 and 1:1 are controlled by the manifest rather than hard-coded edits.
-- **Cinematic but restrained:** motion is deliberately subtle; product UI should remain readable.
+### Creative directors
+
+- Cinematic
+- Product Demo
+- Tech Explainer
+- Documentary
+- Launch / Hype
+- News
+- Talking Head
+- Podcast
+- Motion Graphics
+- Gaming / High Energy
+- Shorts / Reels
+- Localization
+
+Directors can be mixed. A project can use `product_demo + cinematic + shorts` without changing renderer code.
+
+### Visual language
+
+The Studio distinguishes four layers:
+
+1. **Product proof** — authentic screenshots, recordings and official logos.
+2. **Conceptual B-roll** — licensed/public-domain footage or clearly conceptual AI visuals.
+3. **Editorial typography** — hooks, statistics, quotes and CTAs.
+4. **Narration captions** — accessible speech captions, independently styled and timed.
+
+A product claim must not be represented by fabricated UI.
+
+### Camera / editing vocabulary
+
+Push, pull, pan, drift, parallax, macro UI push, subject follow, UI-region follow, simulated rack focus, beat zoom, whip transitions, match cuts, mask reveals, speed ramps, J/L cuts, punch-ins, freeze frames, montages and loop endings are part of the reusable vocabulary.
+
+### Product UI engine
+
+Product assets can be treated as semantic objects with regions such as `headline`, `borrow_amount`, `collateral`, `ltv`, `rate`, `cta`, `chart`, and `loan_health`. The creative planner can direct the camera to a region instead of moving a screenshot randomly.
+
+### Subtitle engine
+
+Subtitle timing supports sentence, phrase, word, karaoke, character and automatic selection. Visual families include clean, premium/minimal, word-pop, phrase-pop, kinetic, bounce, typewriter, highlight, outline, shadow, lower-third, speaker label, dual-language, emphasis, social-bold, news, technical and comic. These are composable with animation, anchor, safe-area and emphasis rules.
+
+### Voice engine
+
+`studio/voice/providers.json` defines a provider-neutral interface with Chatterbox as the preferred local expressive provider, Kokoro as a fast local alternative and Piper as a lightweight fallback. Voice cloning requires consent and provenance. The repository does not embed third-party model weights.
+
+### Media and provenance
+
+`studio/media/sources.json` defines adapters for Pexels, Pixabay, Wikimedia, Internet Archive, NASA and AI-generated conceptual media. Each external asset should retain source URL, retrieval date, license, commercial-use status, attribution and provenance.
+
+### Audio
+
+The production model includes natural voice, pacing, pauses, emphasis, pronunciation dictionaries, music beds, voice ducking, UI clicks, whooshes, impacts, risers, ambience, room tone, silence cleanup and loudness normalization.
+
+### Structured production plan
+
+`production.schema.json` is the contract between the creative planner and renderer. A scene can specify asset, camera, transition, motion graphics, callouts and caption mode. This makes the system deterministic, editable and reusable.
+
+### Quality director
+
+`qc/rules.json` defines technical, visual, audio, story, trust and accessibility checks. Trust checks include official-asset validation, source-claim validation, license provenance and launch-date verification. A failed trust check should block the master.
 
 ## Project model
 
-A project should provide only:
-
-1. `project.json` — brand profile, output format and scene plan.
-2. `assets/` — official product media plus approved conceptual footage.
-3. `audio.mp3` — final narration.
-4. `subtitle.srt` — normal captions.
-5. `subtitle_enhanced.json` — optional word-level timing from the existing Extended subtitle system.
-
-The renderer is reusable for every project.
-
-## Camera language
-
-| Mode | Use |
-|---|---|
-| `push_in` | product reveal / important UI |
-| `pull_out` | conclusion / context |
-| `pan_left/right` | wide screenshot or dashboard |
-| `pan_up/down` | tall mobile UI |
-| `drift_*` | cinematic B-roll |
-| `auto` | deterministic random choice from the safe set |
-| `center` | critical UI that must not move |
-
-## Subtitle rules
-
-Never render a giant full-screen sentence. The studio automatically:
-
-- limits text to two lines;
-- wraps by actual rendered width;
-- keeps a bottom safe margin;
-- uses a compact rounded translucent card;
-- keeps the caption readable over bright UI;
-- can consume the repository's enhanced word-timing JSON.
+A project supplies a manifest, assets, narration/audio and optional word-level transcript. The Studio should never require project-specific renderer code.
 
 ## Example
 
@@ -53,4 +74,6 @@ Never render a giant full-screen sentence. The studio automatically:
 python -m studio.render project.json --output storage/studio/final.mp4
 ```
 
-The Studio layer is intentionally additive: the original MoneyPrinterTurbo API and pipeline remain available while this renderer is developed as the premium production path.
+## Roadmap
+
+The architecture is in place for the next implementation layers: provider adapters, semantic UI-region detection, free-media retrieval, AI B-roll adapters, motion-graphics rendering, automatic story/shot planning, full QC execution and multi-format reframe rendering. These integrations remain optional so the core Studio continues to run without external paid services or model weights.
