@@ -32,12 +32,6 @@ def validation_exception_handler(request: Request, e: RequestValidationError):
 
 
 def get_application() -> FastAPI:
-    """Initialize FastAPI application.
-
-    Returns:
-       FastAPI: Application object instance.
-
-    """
     instance = FastAPI(
         title=config.project_name,
         description=config.project_description,
@@ -52,7 +46,6 @@ def get_application() -> FastAPI:
 
 app = get_application()
 
-# Configures the CORS middleware for the FastAPI app
 cors_allowed_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", "")
 origins = cors_allowed_origins_str.split(",") if cors_allowed_origins_str else ["*"]
 app.add_middleware(
@@ -64,12 +57,14 @@ app.add_middleware(
 )
 
 task_dir = utils.task_dir()
-app.mount(
-    "/tasks", StaticFiles(directory=task_dir, html=True, follow_symlink=True), name=""
-)
+app.mount("/tasks", StaticFiles(directory=task_dir, html=True, follow_symlink=True), name="tasks")
+
+# Studio render outputs are deliberately isolated from the normal task store.
+studio_output_dir = utils.storage_dir("studio", create=True)
+app.mount("/studio-output", StaticFiles(directory=studio_output_dir, html=True), name="studio-output")
 
 public_dir = utils.public_dir()
-app.mount("/", StaticFiles(directory=public_dir, html=True), name="")
+app.mount("/", StaticFiles(directory=public_dir, html=True), name="public")
 
 
 @app.on_event("shutdown")
