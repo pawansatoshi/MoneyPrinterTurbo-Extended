@@ -1,0 +1,12 @@
+version: 1
+styles:
+  documentary: {pacing: restrained, evidence_density: high, typography: restrained, motion: natural, transitions: cut_or_dissolve}
+  cinematic: {pacing: deliberate, evidence_density: medium, typography: minimal, motion: motivated, transitions: motivated}
+  explainer: {pacing: dynamic, evidence_density: high, typography: kinetic, motion: diagrammatic, transitions: purposeful}
+  web3_finance: {pacing: dynamic, evidence_density: very_high, typography: data_led, motion: flow_and_ui, transitions: sharp}
+  launch: {pacing: escalating, evidence_density: medium, typography: hero, motion: reveal, transitions: impact}
+  news: {pacing: fast, evidence_density: very_high, typography: broadcast, motion: information_led, transitions: clean}
+  podcast: {pacing: conversational, evidence_density: medium, typography: social, motion: speaker_follow, transitions: jump_cut}
+  educational: {pacing: adaptive, evidence_density: high, typography: clarity_first, motion: metaphor_and_diagram, transitions: explanatory}
+composition:
+  rules: [safe_area, subject_priority, text_hierarchy, visual_continuity, product_authenticity]
