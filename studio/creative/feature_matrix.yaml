@@ -1,0 +1,41 @@
+version: 2
+status_semantics:
+  implemented: executable and tested
+  adapter: interface exists; external/local provider required
+  planned: specification only
+capabilities:
+  research_engine: {status: adapter}
+  claim_evidence_graph: {status: implemented}
+  story_thesis_engine: {status: implemented}
+  hook_rehook_retention: {status: implemented}
+  visual_metaphor_engine: {status: planned}
+  shot_by_shot_director: {status: implemented}
+  authentic_asset_provenance: {status: implemented}
+  multi_visual_renderer: {status: implemented}
+  talking_head_director: {status: adapter}
+  product_ui_director: {status: implemented}
+  creator_identity_profile: {status: implemented}
+  consent_aware_voice_profile: {status: implemented}
+  natural_voice:
+    status: adapter
+    providers: [chatterbox, kokoro, piper]
+  subtitle_engine: {status: implemented}
+  subtitle_timing: {status: implemented, modes: [sentence, phrase, word, karaoke, character, beat, speaker, auto]}
+  subtitle_visual_families: {status: implemented}
+  kinetic_typography: {status: implemented}
+  motion_graphics: {status: adapter}
+  music_sfx_engine: {status: implemented}
+  ai_broll: {status: adapter}
+  free_footage_search: {status: adapter}
+  model_router: {status: planned}
+  thumbnail_intelligence: {status: implemented}
+  title_laboratory: {status: implemented}
+  platform_adaptation: {status: implemented}
+  automatic_qc: {status: implemented}
+  targeted_self_revision: {status: implemented}
+  project_memory: {status: implemented}
+  conversational_brief: {status: implemented}
+  creator_dna_principles: {status: implemented}
+  factual_launch_date_verification: {status: implemented}
+  license_provenance: {status: implemented}
+  gpu_optional_architecture: {status: implemented}
