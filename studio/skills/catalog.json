@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Pawan Video Studio reusable creative skill registry. Skills are composable and project-independent.",
+  "directors": [
+    {"id":"cinematic","label":"Cinematic","beats":["hook","tension","reveal","payoff"],"visuals":["cinematic_broll","hero_reveal","parallax","macro_push"],"pacing":"medium"},
+    {"id":"product_demo","label":"Product Demo","beats":["problem","feature","interaction","result"],"visuals":["real_ui","ui_region_zoom","cursor_path","callout"],"pacing":"medium"},
+    {"id":"tech_explainer","label":"Tech Explainer","beats":["question","mechanism","example","implication"],"visuals":["diagram","ui","code","kinetic_type"],"pacing":"medium"},
+    {"id":"documentary","label":"Documentary","beats":["context","evidence","human_story","conclusion"],"visuals":["archive","real_footage","maps","lower_thirds"],"pacing":"slow"},
+    {"id":"launch_hype","label":"Launch / Hype","beats":["hook","countdown","reveal","proof","cta"],"visuals":["logo_reveal","fast_cuts","kinetic_type","impact"],"pacing":"fast"},
+    {"id":"news","label":"News","beats":["what","evidence","why","impact","next"],"visuals":["headline","source_card","charts","lower_thirds"],"pacing":"fast"},
+    {"id":"talking_head","label":"Talking Head","beats":["statement","support","statement","payoff"],"visuals":["auto_reframe","punch_in","broll_insert","captions"],"pacing":"medium"},
+    {"id":"podcast","label":"Podcast","beats":["hook","context","best_moment","takeaway"],"visuals":["speaker_switch","waveform","broll","captions"],"pacing":"medium"},
+    {"id":"motion_graphics","label":"Motion Graphics","beats":["setup","build","emphasis","resolve"],"visuals":["kinetic_type","charts","shapes","transitions"],"pacing":"variable"},
+    {"id":"gaming","label":"Gaming / High Energy","beats":["hook","action","reaction","payoff"],"visuals":["zoom","shake","meme","fast_cuts"],"pacing":"very_fast"},
+    {"id":"shorts","label":"Shorts / Reels","beats":["hook","value","pattern_break","cta"],"visuals":["face_follow","dynamic_captions","broll","loop_end"],"pacing":"very_fast"},
+    {"id":"localization","label":"Localization","beats":["preserve_story","translate","re-time","reframe"],"visuals":["subtitle_reflow","dub","safe_area","format_reframe"],"pacing":"inherit"}
+  ],
+  "camera": ["static","push_in","pull_out","pan_left","pan_right","pan_up","pan_down","drift_left","drift_right","drift_up","drift_down","parallax","macro_push","orbit_sim","rack_focus_sim","whip_pan","speed_ramp","subject_follow","ui_region_follow","beat_zoom"],
+  "transitions": ["cut","fade","crossfade","dip_to_black","dip_to_white","match_cut","whip","zoom","blur","glitch","mask_reveal","shape_wipe","light_sweep","film_burn","speed_ramp"],
+  "motion_graphics": ["kinetic_typography","number_counter","progress_bar","chart_draw","arrow","circle","underline","highlight","badge","tooltip","pointer","diagram","timeline","map_path","logo_reveal","lower_third","quote_card","stat_card"],
+  "product_ui": ["browser_frame","phone_frame","desktop_frame","floating_card","perspective_card","ui_region_detection","ui_focus","ui_callout","cursor_simulation","scroll_replay","click_replay","form_fill_replay","chart_focus","before_after","feature_tour"],
+  "broll": ["official_asset_first","licensed_stock","public_domain","archive","nasa","wikimedia","pexels","pixabay","ai_conceptual"],
+  "audio": ["natural_voice","voice_emphasis","breath_control","pause_control","pronunciation","music_bed","ducking","ui_clicks","whoosh","impact","riser","ambience","room_tone","loudness_normalization","silence_cleanup"],
+  "editing": ["beat_cut","sentence_cut","phrase_cut","word_cut","pattern_break","jump_cut","punch_in","broll_insert","J_cut","L_cut","montage","freeze_frame","hold_frame","loop_end","chapter_card"],
+  "quality": ["resolution","aspect_ratio","black_bar_detection","safe_area","text_overlap","subtitle_collision","ui_readability","duplicate_shot","audio_peak","voice_music_balance","silence_detection","caption_sync","missing_assets","license_provenance","source_claim_check","cta_check"]
+}
