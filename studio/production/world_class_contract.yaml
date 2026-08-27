@@ -1,0 +1,64 @@
+version: 1
+release_policy: fail_closed
+stages:
+  - discovery
+  - research
+  - evidence
+  - differentiation
+  - story
+  - visual_language
+  - storyboard
+  - authentic_assets
+  - creator_identity
+  - voice
+  - subtitles
+  - motion
+  - audio
+  - composition
+  - render
+  - visual_qc
+  - audio_qc
+  - factual_qc
+  - authenticity_qc
+  - retention_qc
+  - platform_qc
+  - self_healing
+  - final_director
+required_gates:
+  - identity_provenance
+  - product_authenticity
+  - claim_evidence
+  - visual_integrity
+  - audio_quality
+  - subtitle_quality
+  - story_retention
+  - asset_provenance
+  - platform_compliance
+self_healing:
+  enabled: true
+  max_attempts: 3
+  never_mark_unavailable_analysis_as_pass: true
+  rerun_all_release_gates_after_repair: true
+creative:
+  reject_generic_hooks: true
+  require_project_specific_angle: true
+  require_visual_strategy: true
+  require_real_product_proof_when_available: true
+identity:
+  original_authorized_media_default: true
+  silent_ai_face_substitution: false
+  silent_synthetic_voice_substitution: false
+research:
+  official_first: true
+  reverify_time_sensitive_claims: true
+  unsupported_claims_block_export: true
+assets:
+  fabricated_official_ui: false
+  fabricated_official_logo: false
+  fabricated_official_data: false
+  provenance_required: true
+runtime:
+  providers_are_adapters: true
+  local_first: true
+  resume_from_checkpoint: true
+  platform_reframe_not_crop: true
