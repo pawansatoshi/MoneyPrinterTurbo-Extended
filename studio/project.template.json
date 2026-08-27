@@ -1,0 +1,45 @@
+{
+  "project": {
+    "name": "YOUR_PROJECT",
+    "website": "https://example.com",
+    "logo": "assets/official/logo.png",
+    "brand": {
+      "primary": "#111111",
+      "accent": "#00A86B",
+      "background": "#FFFFFF",
+      "font": "DejaVuSans-Bold.ttf"
+    }
+  },
+  "resolution": [1080, 1920],
+  "fps": 30,
+  "seed": 42,
+  "default_scene_duration": 4.5,
+  "audio": "assets/audio/narration.mp3",
+  "subtitle": "assets/audio/subtitle.srt",
+  "enhanced_subtitle": "assets/audio/subtitle_enhanced.json",
+  "subtitles": {
+    "font_size": 54,
+    "bottom_margin": 120,
+    "font_path": null
+  },
+  "scenes": [
+    {
+      "asset": "assets/official/hero.png",
+      "duration": 4.5,
+      "camera": "push_in",
+      "transition": "fade"
+    },
+    {
+      "asset": "assets/official/product-ui.png",
+      "duration": 5,
+      "camera": "pan_left",
+      "transition": "fade"
+    },
+    {
+      "asset": "assets/concept/bitcoin.mp4",
+      "duration": 4.5,
+      "camera": "drift_right",
+      "transition": "fade"
+    }
+  ]
+}
