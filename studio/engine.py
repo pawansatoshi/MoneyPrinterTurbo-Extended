@@ -1,28 +1,18 @@
 """Reusable cinematic renderer for Pawan Video Studio.
 
-The Studio layer deliberately sits above the existing MoneyPrinterTurbo pipeline.
-It turns every project into a data-driven scene plan instead of hard-coding a
-single brand. The same renderer can therefore be reused for Sats Terminal,
-YeBlock, XREIGN, or any future project.
-
-Features:
-- dynamic camera motion for images and video (push/pull/pan/drift)
-- safe 2-line captions instead of full-screen subtitle collisions
-- optional word-level highlighting from the existing enhanced subtitle JSON
-- deterministic or randomized scene motion
-- project-level visual profiles and per-scene overrides
-- real local assets remain untouched; AI footage can be supplied as normal media
+The Studio layer sits above the existing MoneyPrinterTurbo pipeline. Projects
+change; the renderer stays. Product screenshots remain authentic source assets,
+while motion, captions, timing and composition are generated dynamically.
 """
 
 from __future__ import annotations
 
 import json
-import math
 import random
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from loguru import logger
 from moviepy import AudioFileClip, ColorClip, CompositeVideoClip, ImageClip, VideoFileClip
@@ -53,7 +43,6 @@ def _parse_srt_timestamp(value: str) -> float:
 
 
 def read_srt(path: str | Path) -> list[dict[str, Any]]:
-    """Read a normal SRT file without requiring another subtitle dependency."""
     p = Path(path)
     if not p.exists():
         return []
@@ -65,11 +54,7 @@ def read_srt(path: str | Path) -> list[dict[str, Any]]:
         if len(lines) < 3 or "-->" not in lines[1]:
             continue
         start, end = [x.strip() for x in lines[1].split("-->", 1)]
-        result.append({
-            "start": _parse_srt_timestamp(start),
-            "end": _parse_srt_timestamp(end),
-            "text": " ".join(lines[2:]),
-        })
+        result.append({"start": _parse_srt_timestamp(start), "end": _parse_srt_timestamp(end), "text": " ".join(lines[2:])})
     return result
 
 
@@ -85,7 +70,7 @@ def read_enhanced_subtitles(path: str | Path) -> list[dict[str, Any]]:
         return []
 
 
-def _font(size: int, font_path: str | None = None) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+def _font(size: int, font_path: str | None = None):
     candidates = [font_path] if font_path else []
     candidates += [
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -100,7 +85,7 @@ def _font(size: int, font_path: str | None = None) -> ImageFont.FreeTypeFont | I
     return ImageFont.load_default()
 
 
-def _wrap_words(text: str, font: ImageFont.ImageFont, max_width: int) -> list[str]:
+def _wrap_words(text: str, font, max_width: int) -> list[str]:
     words = text.split()
     lines: list[str] = []
     current = ""
@@ -120,18 +105,12 @@ def _wrap_words(text: str, font: ImageFont.ImageFont, max_width: int) -> list[st
     return lines[:2]
 
 
-def make_caption_image(
-    text: str,
-    width: int,
-    font_size: int = 56,
-    text_color: tuple[int, int, int, int] = (255, 255, 255, 255),
-    box_color: tuple[int, int, int, int] = (0, 0, 0, 165),
-    font_path: str | None = None,
-) -> Image.Image:
-    """Create a compact, safe-area caption image. Never fills the whole frame."""
+def make_caption_image(text: str, width: int, font_size: int = 56,
+                       text_color=(255, 255, 255, 255),
+                       box_color=(0, 0, 0, 165), font_path: str | None = None) -> Image.Image:
+    """Create a compact safe-area caption; never a giant full-screen subtitle."""
     font = _font(font_size, font_path)
-    max_text_width = int(width * 0.86)
-    lines = _wrap_words(text, font, max_text_width)
+    lines = _wrap_words(text, font, int(width * 0.86))
     dummy = Image.new("RGBA", (width, 400), (0, 0, 0, 0))
     draw = ImageDraw.Draw(dummy)
     spacing = max(8, font_size // 6)
@@ -142,8 +121,7 @@ def make_caption_image(
     box_h = text_h + pad_y * 2
     img = Image.new("RGBA", (box_w, box_h), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    radius = 24
-    draw.rounded_rectangle((0, 0, box_w - 1, box_h - 1), radius=radius, fill=box_color)
+    draw.rounded_rectangle((0, 0, box_w - 1, box_h - 1), radius=24, fill=box_color)
     y = pad_y
     for b, line in zip(boxes, lines):
         tw = b[2] - b[0]
@@ -153,75 +131,70 @@ def make_caption_image(
     return img
 
 
-def _camera_key(scene_index: int, style: str, seed: int) -> str:
+def _camera_key(style: str, seed: int) -> str:
     if style != "auto":
         return style
-    rng = random.Random(seed + scene_index * 9973)
-    return rng.choice(CAMERA_STYLES[:-1])
+    return random.Random(seed).choice(CAMERA_STYLES[:-1])
 
 
 def apply_camera_motion(clip, width: int, height: int, style: str, seed: int):
-    """Apply a restrained cinematic camera move to a clip."""
-    style = style if style in CAMERA_STYLES else "auto"
-    style = _camera_key(seed, style, seed)
-    # Keep motion subtle: 1.04–1.12 scale avoids the amateurish hard zoom look.
-    if style in {"push_in", "pull_out", "drift_left", "drift_right", "drift_up", "drift_down"}:
-        start_scale, end_scale = (1.04, 1.10) if style != "pull_out" else (1.10, 1.04)
-        if style == "pull_out":
-            start_scale, end_scale = 1.10, 1.04
+    """Apply restrained cinematic camera movement to images or video."""
+    style = _camera_key(style if style in CAMERA_STYLES else "auto", seed)
+    moving = {"push_in", "pull_out", "pan_left", "pan_right", "pan_up", "pan_down",
+              "drift_left", "drift_right", "drift_up", "drift_down"}
+    if style not in moving:
+        return clip.with_position("center")
 
-        effect = Resize(lambda t: start_scale + (end_scale - start_scale) * (t / max(clip.duration, 0.001)))
-        clip = clip.with_effects([effect])
-        base_w, base_h = clip.w * start_scale, clip.h * start_scale
-        extra_x = max(0, base_w - width)
-        extra_y = max(0, base_h - height)
+    if style == "pull_out":
+        start_scale, end_scale = 1.10, 1.04
+    elif style == "push_in":
+        start_scale, end_scale = 1.04, 1.10
+    else:
+        start_scale, end_scale = 1.07, 1.07
 
-        def pos(t):
-            p = min(1.0, max(0.0, t / max(clip.duration, 0.001)))
-            if style in {"drift_left", "pan_left"}:
-                return (-extra_x * p, (height - clip.h) / 2)
-            if style in {"drift_right", "pan_right"}:
-                return (-extra_x * (1 - p), (height - clip.h) / 2)
-            if style in {"drift_up", "pan_up"}:
-                return ((width - clip.w) / 2, -extra_y * p)
-            if style in {"drift_down", "pan_down"}:
-                return ((width - clip.w) / 2, -extra_y * (1 - p))
-            return ((width - clip.w) / 2, (height - clip.h) / 2)
+    clip = clip.with_effects([Resize(lambda t: start_scale + (end_scale - start_scale) * (t / max(clip.duration, 0.001)))])
+    # The clip is already scaled to cover the output frame. These offsets are
+    # intentionally small so UI text remains readable.
+    travel_x = max(0.0, clip.w - width) * 0.72
+    travel_y = max(0.0, clip.h - height) * 0.72
 
-        return clip.with_position(pos)
+    def pos(t):
+        p = min(1.0, max(0.0, t / max(clip.duration, 0.001)))
+        if style in {"pan_left", "drift_left"}:
+            return (-travel_x * p, (height - clip.h) / 2)
+        if style in {"pan_right", "drift_right"}:
+            return (-travel_x * (1 - p), (height - clip.h) / 2)
+        if style in {"pan_up", "drift_up"}:
+            return ((width - clip.w) / 2, -travel_y * p)
+        if style in {"pan_down", "drift_down"}:
+            return ((width - clip.w) / 2, -travel_y * (1 - p))
+        return ((width - clip.w) / 2, (height - clip.h) / 2)
 
-    return clip.with_position("center")
+    return clip.with_position(pos)
 
 
 def _load_media(path: str, duration: float, width: int, height: int):
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(path)
-    suffix = p.suffix.lower()
-    if suffix in {".png", ".jpg", ".jpeg", ".webp"}:
+    if p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
         clip = ImageClip(str(p)).with_duration(duration)
     else:
-        clip = VideoFileClip(str(p)).subclipped(0, min(duration, VideoFileClip(str(p)).duration))
-        if clip.duration < duration:
+        source = VideoFileClip(str(p))
+        clip_duration = min(duration, source.duration)
+        clip = source.subclipped(0, clip_duration)
+        if clip_duration < duration:
             clip = clip.with_duration(duration)
-    # Cover crop: scale until the full frame is covered, then center.
+
     scale = max(width / clip.w, height / clip.h)
     clip = clip.resized(scale)
     background = ColorClip((width, height), color=(8, 10, 14)).with_duration(duration)
-    clip = CompositeVideoClip([background, clip.with_position("center")], size=(width, height)).with_duration(duration)
-    return clip
+    return CompositeVideoClip([background, clip.with_position("center")], size=(width, height)).with_duration(duration)
 
 
-def render(
-    manifest: str | Path | dict[str, Any],
-    output: str | Path,
-) -> str:
+def render(manifest: str | Path | dict[str, Any], output: str | Path) -> str:
     """Render a Studio manifest to MP4."""
-    if isinstance(manifest, (str, Path)):
-        spec = json.loads(Path(manifest).read_text(encoding="utf-8"))
-    else:
-        spec = manifest
-
+    spec = json.loads(Path(manifest).read_text(encoding="utf-8")) if isinstance(manifest, (str, Path)) else manifest
     width, height = spec.get("resolution", [1080, 1920])
     seed = int(spec.get("seed", 42))
     scenes = [Scene(**s) for s in spec["scenes"]]
@@ -237,13 +210,11 @@ def render(
     total = audio.duration if audio else sum((s.duration or 0) for s in scenes)
     clips = []
     cursor = 0.0
-
     for idx, scene in enumerate(scenes):
         remaining = max(0.1, total - cursor)
-        duration = float(scene.duration or min(remaining, spec.get("default_scene_duration", 4.5)))
-        duration = min(duration, remaining)
+        duration = min(float(scene.duration or spec.get("default_scene_duration", 4.5)), remaining)
         base = _load_media(scene.asset, duration, width, height)
-        base = apply_camera_motion(base, width, height, scene.camera, seed + idx)
+        base = apply_camera_motion(base, width, height, scene.camera, seed + idx * 1009)
         clips.append(base.with_start(cursor))
         cursor += duration
         if cursor >= total - 0.01:
@@ -251,34 +222,22 @@ def render(
 
     if not clips:
         raise ValueError("Studio manifest contains no renderable scenes")
-
     timeline = CompositeVideoClip(clips, size=(width, height)).with_duration(total)
 
-    # Phrase-level captions are always safe. Word-level mode is added when the
-    # existing enhanced subtitle JSON is available.
     enhanced = read_enhanced_subtitles(enhanced_path) if enhanced_path else []
     srt = read_srt(srt_path) if srt_path else []
     caption_clips = []
-
-    if enhanced:
-        # Build compact word groups using the existing word timestamps. Each
-        # word is rendered as a separate clip so the active word can highlight.
-        for item in enhanced:
-            words = item.get("words", [])
-            if not words:
-                continue
-            text = item.get("text", "")
-            img = make_caption_image(text, width, font_size, font_path=font_path)
-            caption = ImageClip(img).with_start(float(item["start_time"])).with_duration(
-                max(0.05, float(item["end_time"]) - float(item["start_time"]))
-            caption = caption.with_position(("center", height - img.height - subtitle_gap))
-            caption_clips.append(caption)
-    else:
-        for item in srt:
-            img = make_caption_image(item["text"], width, font_size, font_path=font_path)
-            caption = ImageClip(img).with_start(item["start"]).with_duration(max(0.05, item["end"] - item["start"]))
-            caption = caption.with_position(("center", height - img.height - subtitle_gap))
-            caption_clips.append(caption)
+    items = enhanced or srt
+    for item in items:
+        if enhanced:
+            start, end, text = float(item["start_time"]), float(item["end_time"]), item.get("text", "")
+        else:
+            start, end, text = item["start"], item["end"], item["text"]
+        if not text:
+            continue
+        img = make_caption_image(text, width, font_size, font_path=font_path)
+        caption = ImageClip(img).with_start(start).with_duration(max(0.05, end - start))
+        caption_clips.append(caption.with_position(("center", height - img.height - subtitle_gap)))
 
     final = CompositeVideoClip([timeline, *caption_clips], size=(width, height)).with_duration(total)
     if audio:
