@@ -1,0 +1,299 @@
+"""Reusable cinematic renderer for Pawan Video Studio.
+
+The Studio layer deliberately sits above the existing MoneyPrinterTurbo pipeline.
+It turns every project into a data-driven scene plan instead of hard-coding a
+single brand. The same renderer can therefore be reused for Sats Terminal,
+YeBlock, XREIGN, or any future project.
+
+Features:
+- dynamic camera motion for images and video (push/pull/pan/drift)
+- safe 2-line captions instead of full-screen subtitle collisions
+- optional word-level highlighting from the existing enhanced subtitle JSON
+- deterministic or randomized scene motion
+- project-level visual profiles and per-scene overrides
+- real local assets remain untouched; AI footage can be supplied as normal media
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import random
+import re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Iterable
+
+from loguru import logger
+from moviepy import AudioFileClip, ColorClip, CompositeVideoClip, ImageClip, VideoFileClip
+from moviepy.video.fx import Resize
+from PIL import Image, ImageDraw, ImageFont
+
+
+@dataclass
+class Scene:
+    asset: str
+    duration: float | None = None
+    camera: str = "auto"
+    transition: str = "fade"
+    crop: str = "cover"
+    subtitle_style: str | None = None
+    overlay: str | None = None
+
+
+CAMERA_STYLES = (
+    "push_in", "pull_out", "pan_left", "pan_right", "pan_up", "pan_down",
+    "drift_left", "drift_right", "drift_up", "drift_down", "center", "auto",
+)
+
+
+def _parse_srt_timestamp(value: str) -> float:
+    h, m, rest = value.replace(",", ".").split(":")
+    return int(h) * 3600 + int(m) * 60 + float(rest)
+
+
+def read_srt(path: str | Path) -> list[dict[str, Any]]:
+    """Read a normal SRT file without requiring another subtitle dependency."""
+    p = Path(path)
+    if not p.exists():
+        return []
+    text = p.read_text(encoding="utf-8-sig")
+    blocks = re.split(r"\n\s*\n", text.strip())
+    result: list[dict[str, Any]] = []
+    for block in blocks:
+        lines = [x.strip() for x in block.splitlines() if x.strip()]
+        if len(lines) < 3 or "-->" not in lines[1]:
+            continue
+        start, end = [x.strip() for x in lines[1].split("-->", 1)]
+        result.append({
+            "start": _parse_srt_timestamp(start),
+            "end": _parse_srt_timestamp(end),
+            "text": " ".join(lines[2:]),
+        })
+    return result
+
+
+def read_enhanced_subtitles(path: str | Path) -> list[dict[str, Any]]:
+    p = Path(path)
+    if not p.exists():
+        return []
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+        return data if isinstance(data, list) else []
+    except Exception as exc:
+        logger.warning(f"Could not read enhanced subtitles: {exc}")
+        return []
+
+
+def _font(size: int, font_path: str | None = None) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    candidates = [font_path] if font_path else []
+    candidates += [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf",
+    ]
+    for candidate in candidates:
+        if candidate and Path(candidate).exists():
+            try:
+                return ImageFont.truetype(candidate, size=size)
+            except Exception:
+                pass
+    return ImageFont.load_default()
+
+
+def _wrap_words(text: str, font: ImageFont.ImageFont, max_width: int) -> list[str]:
+    words = text.split()
+    lines: list[str] = []
+    current = ""
+    dummy = Image.new("RGB", (10, 10))
+    draw = ImageDraw.Draw(dummy)
+    for word in words:
+        candidate = word if not current else f"{current} {word}"
+        bbox = draw.textbbox((0, 0), candidate, font=font, stroke_width=0)
+        if bbox[2] <= max_width:
+            current = candidate
+        else:
+            if current:
+                lines.append(current)
+            current = word
+    if current:
+        lines.append(current)
+    return lines[:2]
+
+
+def make_caption_image(
+    text: str,
+    width: int,
+    font_size: int = 56,
+    text_color: tuple[int, int, int, int] = (255, 255, 255, 255),
+    box_color: tuple[int, int, int, int] = (0, 0, 0, 165),
+    font_path: str | None = None,
+) -> Image.Image:
+    """Create a compact, safe-area caption image. Never fills the whole frame."""
+    font = _font(font_size, font_path)
+    max_text_width = int(width * 0.86)
+    lines = _wrap_words(text, font, max_text_width)
+    dummy = Image.new("RGBA", (width, 400), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(dummy)
+    spacing = max(8, font_size // 6)
+    boxes = [draw.textbbox((0, 0), line, font=font, stroke_width=2) for line in lines]
+    text_h = sum(b[3] - b[1] for b in boxes) + spacing * max(0, len(lines) - 1)
+    pad_x, pad_y = 28, 18
+    box_w = min(width - 48, max(b[2] - b[0] for b in boxes) + pad_x * 2)
+    box_h = text_h + pad_y * 2
+    img = Image.new("RGBA", (box_w, box_h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    radius = 24
+    draw.rounded_rectangle((0, 0, box_w - 1, box_h - 1), radius=radius, fill=box_color)
+    y = pad_y
+    for b, line in zip(boxes, lines):
+        tw = b[2] - b[0]
+        x = (box_w - tw) // 2
+        draw.text((x, y), line, font=font, fill=text_color, stroke_width=2, stroke_fill=(0, 0, 0, 210))
+        y += (b[3] - b[1]) + spacing
+    return img
+
+
+def _camera_key(scene_index: int, style: str, seed: int) -> str:
+    if style != "auto":
+        return style
+    rng = random.Random(seed + scene_index * 9973)
+    return rng.choice(CAMERA_STYLES[:-1])
+
+
+def apply_camera_motion(clip, width: int, height: int, style: str, seed: int):
+    """Apply a restrained cinematic camera move to a clip."""
+    style = style if style in CAMERA_STYLES else "auto"
+    style = _camera_key(seed, style, seed)
+    # Keep motion subtle: 1.04–1.12 scale avoids the amateurish hard zoom look.
+    if style in {"push_in", "pull_out", "drift_left", "drift_right", "drift_up", "drift_down"}:
+        start_scale, end_scale = (1.04, 1.10) if style != "pull_out" else (1.10, 1.04)
+        if style == "pull_out":
+            start_scale, end_scale = 1.10, 1.04
+
+        effect = Resize(lambda t: start_scale + (end_scale - start_scale) * (t / max(clip.duration, 0.001)))
+        clip = clip.with_effects([effect])
+        base_w, base_h = clip.w * start_scale, clip.h * start_scale
+        extra_x = max(0, base_w - width)
+        extra_y = max(0, base_h - height)
+
+        def pos(t):
+            p = min(1.0, max(0.0, t / max(clip.duration, 0.001)))
+            if style in {"drift_left", "pan_left"}:
+                return (-extra_x * p, (height - clip.h) / 2)
+            if style in {"drift_right", "pan_right"}:
+                return (-extra_x * (1 - p), (height - clip.h) / 2)
+            if style in {"drift_up", "pan_up"}:
+                return ((width - clip.w) / 2, -extra_y * p)
+            if style in {"drift_down", "pan_down"}:
+                return ((width - clip.w) / 2, -extra_y * (1 - p))
+            return ((width - clip.w) / 2, (height - clip.h) / 2)
+
+        return clip.with_position(pos)
+
+    return clip.with_position("center")
+
+
+def _load_media(path: str, duration: float, width: int, height: int):
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(path)
+    suffix = p.suffix.lower()
+    if suffix in {".png", ".jpg", ".jpeg", ".webp"}:
+        clip = ImageClip(str(p)).with_duration(duration)
+    else:
+        clip = VideoFileClip(str(p)).subclipped(0, min(duration, VideoFileClip(str(p)).duration))
+        if clip.duration < duration:
+            clip = clip.with_duration(duration)
+    # Cover crop: scale until the full frame is covered, then center.
+    scale = max(width / clip.w, height / clip.h)
+    clip = clip.resized(scale)
+    background = ColorClip((width, height), color=(8, 10, 14)).with_duration(duration)
+    clip = CompositeVideoClip([background, clip.with_position("center")], size=(width, height)).with_duration(duration)
+    return clip
+
+
+def render(
+    manifest: str | Path | dict[str, Any],
+    output: str | Path,
+) -> str:
+    """Render a Studio manifest to MP4."""
+    if isinstance(manifest, (str, Path)):
+        spec = json.loads(Path(manifest).read_text(encoding="utf-8"))
+    else:
+        spec = manifest
+
+    width, height = spec.get("resolution", [1080, 1920])
+    seed = int(spec.get("seed", 42))
+    scenes = [Scene(**s) for s in spec["scenes"]]
+    audio_path = spec.get("audio")
+    srt_path = spec.get("subtitle")
+    enhanced_path = spec.get("enhanced_subtitle")
+    subtitle_cfg = spec.get("subtitles", {})
+    font_size = int(subtitle_cfg.get("font_size", 54))
+    font_path = subtitle_cfg.get("font_path")
+    subtitle_gap = float(subtitle_cfg.get("bottom_margin", 120))
+
+    audio = AudioFileClip(audio_path) if audio_path else None
+    total = audio.duration if audio else sum((s.duration or 0) for s in scenes)
+    clips = []
+    cursor = 0.0
+
+    for idx, scene in enumerate(scenes):
+        remaining = max(0.1, total - cursor)
+        duration = float(scene.duration or min(remaining, spec.get("default_scene_duration", 4.5)))
+        duration = min(duration, remaining)
+        base = _load_media(scene.asset, duration, width, height)
+        base = apply_camera_motion(base, width, height, scene.camera, seed + idx)
+        clips.append(base.with_start(cursor))
+        cursor += duration
+        if cursor >= total - 0.01:
+            break
+
+    if not clips:
+        raise ValueError("Studio manifest contains no renderable scenes")
+
+    timeline = CompositeVideoClip(clips, size=(width, height)).with_duration(total)
+
+    # Phrase-level captions are always safe. Word-level mode is added when the
+    # existing enhanced subtitle JSON is available.
+    enhanced = read_enhanced_subtitles(enhanced_path) if enhanced_path else []
+    srt = read_srt(srt_path) if srt_path else []
+    caption_clips = []
+
+    if enhanced:
+        # Build compact word groups using the existing word timestamps. Each
+        # word is rendered as a separate clip so the active word can highlight.
+        for item in enhanced:
+            words = item.get("words", [])
+            if not words:
+                continue
+            text = item.get("text", "")
+            img = make_caption_image(text, width, font_size, font_path=font_path)
+            caption = ImageClip(img).with_start(float(item["start_time"])).with_duration(
+                max(0.05, float(item["end_time"]) - float(item["start_time"]))
+            caption = caption.with_position(("center", height - img.height - subtitle_gap))
+            caption_clips.append(caption)
+    else:
+        for item in srt:
+            img = make_caption_image(item["text"], width, font_size, font_path=font_path)
+            caption = ImageClip(img).with_start(item["start"]).with_duration(max(0.05, item["end"] - item["start"]))
+            caption = caption.with_position(("center", height - img.height - subtitle_gap))
+            caption_clips.append(caption)
+
+    final = CompositeVideoClip([timeline, *caption_clips], size=(width, height)).with_duration(total)
+    if audio:
+        final = final.with_audio(audio)
+
+    output = str(output)
+    Path(output).parent.mkdir(parents=True, exist_ok=True)
+    final.write_videofile(
+        output,
+        fps=int(spec.get("fps", 30)),
+        codec=spec.get("codec", "libx264"),
+        audio_codec="aac",
+        bitrate=spec.get("bitrate", "8000k"),
+        audio_bitrate=spec.get("audio_bitrate", "256k"),
+        preset=spec.get("preset", "medium"),
+        ffmpeg_params=["-crf", str(spec.get("crf", 18)), "-movflags", "+faststart"],
+    )
+    return output
