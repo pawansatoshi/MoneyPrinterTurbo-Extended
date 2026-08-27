@@ -1,0 +1,17 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"Pawan Video Studio Production Plan",
+  "type":"object",
+  "required":["project","format","director","story","assets","audio","subtitles","quality"],
+  "properties":{
+    "project":{"type":"object","required":["name","website"],"properties":{"name":{"type":"string"},"website":{"type":"string"},"launch_date":{"type":["string","null"]},"claims_policy":{"enum":["official_only","researched","creative"]}}},
+    "format":{"enum":["16:9","9:16","1:1"]},
+    "director":{"type":"object","properties":{"primary":{"type":"string"},"mix":{"type":"array","items":{"type":"string"}},"pacing":{"type":"string"},"retention_target":{"type":"number"}}},
+    "story":{"type":"object","required":["hook","beats"],"properties":{"hook":{"type":"string"},"beats":{"type":"array"},"cta":{"type":"string"}}},
+    "assets":{"type":"array","items":{"type":"object","required":["id","kind","source","license"],"properties":{"id":{"type":"string"},"kind":{"type":"string"},"source":{"type":"string"},"license":{"type":"string"},"official":{"type":"boolean"},"regions":{"type":"array"}}}},
+    "audio":{"type":"object","properties":{"voice":{"type":"string"},"pace":{"type":"string"},"emotion":{"type":"string"},"music":{"type":"string"},"sfx":{"type":"array"}}},
+    "subtitles":{"type":"object","properties":{"style":{"type":"string"},"timing":{"enum":["sentence","phrase","word","karaoke","character","auto"]},"language":{"type":"string"},"secondary_language":{"type":["string","null"]},"safe_area":{"type":"boolean"}}},
+    "scenes":{"type":"array","items":{"type":"object","properties":{"duration":{"type":"number"},"asset":{"type":"string"},"camera":{"type":"string"},"transition":{"type":"string"},"motion_graphics":{"type":"array"},"callouts":{"type":"array"},"caption_mode":{"type":"string"}}}},
+    "quality":{"type":"object","properties":{"auto_qc":{"type":"boolean"},"max_text_coverage":{"type":"number"},"require_asset_provenance":{"type":"boolean"},"require_source_claims":{"type":"boolean"}}}
+  }
+}
