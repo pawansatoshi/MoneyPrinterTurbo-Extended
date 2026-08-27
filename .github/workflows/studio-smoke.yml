@@ -1,0 +1,26 @@
+name: Studio Smoke Test
+
+on:
+  push:
+    paths:
+      - 'studio/**'
+      - 'app/controllers/v1/studio.py'
+      - 'app/router.py'
+      - 'app/asgi.py'
+  pull_request:
+    paths:
+      - 'studio/**'
+      - 'app/controllers/v1/studio.py'
+      - 'app/router.py'
+      - 'app/asgi.py'
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile Studio Python modules
+        run: python -m py_compile studio/*.py app/controllers/v1/studio.py app/router.py app/asgi.py
