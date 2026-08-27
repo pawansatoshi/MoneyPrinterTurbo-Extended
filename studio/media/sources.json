@@ -1,0 +1,23 @@
+{
+  "schema_version":"1.0",
+  "priority":["official_project_assets","user_assets","licensed_stock","public_domain","ai_conceptual"],
+  "providers": {
+    "pexels":{"kind":"api","requires_key":true,"license_check":"provider_terms"},
+    "pixabay":{"kind":"api","requires_key":true,"license_check":"provider_terms"},
+    "wikimedia":{"kind":"api","requires_key":false,"license_check":"per_asset"},
+    "internet_archive":{"kind":"api","requires_key":false,"license_check":"per_asset"},
+    "nasa":{"kind":"api","requires_key":false,"license_check":"nasa_media_rules"},
+    "ai":{"kind":"local_or_adapter","requires_key":false,"license_check":"model_license"}
+  },
+  "asset_record": {
+    "required":["id","kind","source_url","retrieved_at","license","commercial_use","attribution","official"],
+    "optional":["creator","model","prompt","hash","regions","notes"]
+  },
+  "rules":[
+    "Never fabricate a real product UI or logo.",
+    "Prefer official project assets for product claims.",
+    "Verify per-asset license before publishing.",
+    "Keep source URL and retrieval metadata with the project.",
+    "AI-generated conceptual B-roll must not be presented as documentary evidence."
+  ]
+}
