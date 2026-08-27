@@ -1,0 +1,13 @@
+{
+  "project": "Example Project",
+  "official_origin": "https://example.com",
+  "allowed_paths": ["/", "/blog", "/docs", "/faq"],
+  "crawl": {"max_pages": 40, "refresh_before_production": true},
+  "asset_policy": {
+    "official_logo_only": true,
+    "official_product_ui_only": true,
+    "official_announcements_only": true,
+    "generated_conceptual_media_allowed": true
+  },
+  "cache": "storage/studio/site-intelligence/example-project.json"
+}
