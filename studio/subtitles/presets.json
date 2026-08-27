@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "styles": {
+    "clean": {"timing":"sentence","font_weight":700,"font_size":52,"max_lines":2,"max_width":0.82,"anchor":"bottom_center","background":"rounded","background_opacity":0.35,"outline":2,"shadow":true,"animation":"fade"},
+    "word_pop": {"timing":"word","font_weight":800,"font_size":54,"max_lines":2,"max_width":0.84,"anchor":"bottom_center","background":"none","active_word":"accent","animation":"pop"},
+    "karaoke": {"timing":"karaoke","font_weight":750,"font_size":50,"max_lines":2,"max_width":0.86,"anchor":"bottom_center","background":"none","active_word":"accent","animation":"highlight"},
+    "phrase_pop": {"timing":"phrase","font_weight":800,"font_size":58,"max_lines":2,"max_width":0.84,"anchor":"bottom_center","background":"none","animation":"pop"},
+    "kinetic": {"timing":"phrase","font_weight":900,"font_size":64,"max_lines":2,"max_width":0.80,"anchor":"center_safe","background":"none","animation":"kinetic"},
+    "bounce": {"timing":"phrase","font_weight":900,"font_size":62,"max_lines":2,"max_width":0.80,"anchor":"bottom_center","background":"rounded","background_opacity":0.25,"animation":"bounce"},
+    "typewriter": {"timing":"character","font_weight":650,"font_size":48,"max_lines":2,"max_width":0.80,"anchor":"bottom_center","background":"none","animation":"typewriter"},
+    "highlight_box": {"timing":"word","font_weight":750,"font_size":52,"max_lines":2,"max_width":0.82,"anchor":"bottom_center","background":"none","active_word":"box","animation":"fade"},
+    "outline": {"timing":"sentence","font_weight":800,"font_size":54,"max_lines":2,"max_width":0.84,"anchor":"bottom_center","background":"none","outline":5,"shadow":true,"animation":"fade"},
+    "shadow": {"timing":"sentence","font_weight":700,"font_size":52,"max_lines":2,"max_width":0.84,"anchor":"bottom_center","background":"none","outline":0,"shadow":true,"animation":"fade"},
+    "lower_third": {"timing":"phrase","font_weight":650,"font_size":42,"max_lines":2,"max_width":0.72,"anchor":"lower_left","background":"rounded","background_opacity":0.72,"animation":"slide_left"},
+    "speaker_label": {"timing":"phrase","font_weight":600,"font_size":40,"max_lines":2,"max_width":0.72,"anchor":"lower_left","background":"rounded","background_opacity":0.70,"animation":"slide_left","speaker_label":true},
+    "dual_language": {"timing":"phrase","font_weight":650,"font_size":42,"max_lines":2,"max_width":0.82,"anchor":"bottom_center","background":"rounded","background_opacity":0.30,"animation":"fade","secondary_line":true},
+    "emphasis": {"timing":"phrase","font_weight":750,"font_size":52,"max_lines":2,"max_width":0.82,"anchor":"bottom_center","background":"none","animation":"emphasis"},
+    "minimal": {"timing":"sentence","font_weight":550,"font_size":34,"max_lines":2,"max_width":0.72,"anchor":"bottom_center","background":"none","outline":1,"shadow":true,"animation":"fade"},
+    "social_bold": {"timing":"word","font_weight":900,"font_size":68,"max_lines":2,"max_width":0.88,"anchor":"bottom_center","background":"rounded","background_opacity":0.28,"active_word":"accent","animation":"pop"},
+    "news_broadcast": {"timing":"phrase","font_weight":700,"font_size":40,"max_lines":2,"max_width":0.76,"anchor":"lower_left","background":"solid","background_opacity":0.88,"animation":"slide_left"},
+    "technical": {"timing":"phrase","font_weight":650,"font_size":40,"max_lines":2,"max_width":0.78,"anchor":"bottom_center","background":"rounded","background_opacity":0.40,"animation":"fade"},
+    "comic": {"timing":"word","font_weight":900,"font_size":64,"max_lines":2,"max_width":0.84,"anchor":"center_safe","background":"none","outline":4,"active_word":"accent","animation":"bounce"},
+    "auto": {"timing":"auto","selection":"creative_director"}
+  },
+  "formats": {
+    "16:9": {"safe_top":0.07,"safe_bottom":0.10,"safe_left":0.06,"safe_right":0.06},
+    "9:16": {"safe_top":0.10,"safe_bottom":0.16,"safe_left":0.07,"safe_right":0.07},
+    "1:1": {"safe_top":0.08,"safe_bottom":0.13,"safe_left":0.07,"safe_right":0.07}
+  }
+}
