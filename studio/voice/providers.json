@@ -1,11 +1,11 @@
 {
-  "schema_version":"1.0",
-  "default":"chatterbox",
+  "schema_version": "1.1",
+  "default": "chatterbox",
   "providers": {
-    "chatterbox": {"kind":"local_command","command":"python -m chatterbox_tts","optional":true,"features":["natural_voice","expressive","voice_clone_with_consent","emotion"]},
-    "kokoro": {"kind":"local_command","command":"python -m kokoro_tts","optional":true,"features":["natural_voice","fast_local","multi_voice"]},
-    "piper": {"kind":"local_command","command":"python -m piper","optional":true,"features":["offline","lightweight","fallback"]},
-    "external": {"kind":"adapter","command":null,"optional":true,"features":["provider_defined"]}
+    "chatterbox": {"kind":"local_command","command_template":"python -m chatterbox_tts --text-file {text} --output {output}","optional":true,"features":["natural_voice","expressive","voice_clone_with_consent","emotion"]},
+    "kokoro": {"kind":"local_command","command_template":"python -m kokoro_tts --text-file {text} --output {output}","optional":true,"features":["natural_voice","fast_local","multi_voice"]},
+    "piper": {"kind":"local_command","command_template":"python -m piper --text-file {text} --output {output}","optional":true,"features":["offline","lightweight","fallback"]},
+    "external": {"kind":"adapter","command_template":null,"optional":true,"features":["provider_defined"]}
   },
   "policy": {
     "require_consent_for_voice_cloning": true,
