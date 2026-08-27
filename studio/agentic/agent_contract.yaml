@@ -1,0 +1,45 @@
+version: 1
+name: pawanstudio-master-director
+modes: [automatic, director_approval, expert]
+stages:
+  - context
+  - research
+  - evidence
+  - thesis
+  - story
+  - visual_grammar
+  - storyboard
+  - assets
+  - voice
+  - captions
+  - edit
+  - compose
+  - preflight
+  - render
+  - review
+  - revise
+  - post_review
+  - platform_exports
+gates:
+  authenticity: {blocking: true}
+  evidence: {blocking: true}
+  provenance: {blocking: true}
+  creator_consent: {blocking: true}
+  delivery_spec: {blocking: true}
+  post_render_review: {blocking: true}
+approval_points:
+  automatic: []
+  director_approval: [research, story, storyboard, final]
+  expert: [research, evidence, story, storyboard, assets, final]
+review_panels:
+  - story
+  - factual
+  - authenticity
+  - visual
+  - audio
+  - subtitle
+  - retention
+  - platform
+revision_policy:
+  max_rounds: 3
+  scope: affected_scenes_only
