@@ -85,21 +85,22 @@ def _font(size: int, font_path: str | None = None):
     return ImageFont.load_default()
 
 
-def _wrap_words(text: str, font, max_width: int) -> list[str]:
-    words = text.split()
-    lines: list[str] = []
-    current = ""
+def _layout_words(words: list[str], font, max_width: int) -> list[list[str]]:
     dummy = Image.new("RGB", (10, 10))
     draw = ImageDraw.Draw(dummy)
+    lines: list[list[str]] = []
+    current: list[str] = []
     for word in words:
-        candidate = word if not current else f"{current} {word}"
+        candidate = " ".join(current + [word])
         bbox = draw.textbbox((0, 0), candidate, font=font, stroke_width=0)
-        if bbox[2] <= max_width:
-            current = candidate
+        if bbox[2] <= max_width or not current:
+            current.append(word)
         else:
-            if current:
-                lines.append(current)
-            current = word
+            lines.append(current)
+            current = [word]
+        if len(lines) == 1 and len(current) > 8:
+            lines.append(current)
+            current = []
     if current:
         lines.append(current)
     return lines[:2]
@@ -107,27 +108,37 @@ def _wrap_words(text: str, font, max_width: int) -> list[str]:
 
 def make_caption_image(text: str, width: int, font_size: int = 56,
                        text_color=(255, 255, 255, 255),
-                       box_color=(0, 0, 0, 165), font_path: str | None = None) -> Image.Image:
-    """Create a compact safe-area caption; never a giant full-screen subtitle."""
+                       box_color=(0, 0, 0, 165), font_path: str | None = None,
+                       active_word: int | None = None,
+                       highlight_color=(24, 199, 122, 255)) -> Image.Image:
+    """Create a compact safe-area caption, optionally highlighting one word."""
     font = _font(font_size, font_path)
-    lines = _wrap_words(text, font, int(width * 0.86))
+    words = text.split()
+    lines = _layout_words(words, font, int(width * 0.86))
     dummy = Image.new("RGBA", (width, 400), (0, 0, 0, 0))
     draw = ImageDraw.Draw(dummy)
     spacing = max(8, font_size // 6)
-    boxes = [draw.textbbox((0, 0), line, font=font, stroke_width=2) for line in lines]
-    text_h = sum(b[3] - b[1] for b in boxes) + spacing * max(0, len(lines) - 1)
+    line_boxes = [draw.textbbox((0, 0), " ".join(line), font=font, stroke_width=2) for line in lines]
+    text_h = sum(b[3] - b[1] for b in line_boxes) + spacing * max(0, len(lines) - 1)
     pad_x, pad_y = 28, 18
-    box_w = min(width - 48, max(b[2] - b[0] for b in boxes) + pad_x * 2)
+    box_w = min(width - 48, max(b[2] - b[0] for b in line_boxes) + pad_x * 2)
     box_h = text_h + pad_y * 2
     img = Image.new("RGBA", (box_w, box_h), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     draw.rounded_rectangle((0, 0, box_w - 1, box_h - 1), radius=24, fill=box_color)
+
+    global_index = 0
     y = pad_y
-    for b, line in zip(boxes, lines):
-        tw = b[2] - b[0]
-        x = (box_w - tw) // 2
-        draw.text((x, y), line, font=font, fill=text_color, stroke_width=2, stroke_fill=(0, 0, 0, 210))
-        y += (b[3] - b[1]) + spacing
+    for line, box in zip(lines, line_boxes):
+        widths = [draw.textbbox((0, 0), w, font=font, stroke_width=2)[2] for w in line]
+        line_width = sum(widths) + max(0, len(line) - 1) * font_size // 3
+        x = max(pad_x, (box_w - line_width) // 2)
+        for word, word_width in zip(line, widths):
+            color = highlight_color if active_word == global_index else text_color
+            draw.text((x, y), word, font=font, fill=color, stroke_width=2, stroke_fill=(0, 0, 0, 210))
+            x += word_width + font_size // 3
+            global_index += 1
+        y += (box[3] - box[1]) + spacing
     return img
 
 
@@ -153,8 +164,6 @@ def apply_camera_motion(clip, width: int, height: int, style: str, seed: int):
         start_scale, end_scale = 1.07, 1.07
 
     clip = clip.with_effects([Resize(lambda t: start_scale + (end_scale - start_scale) * (t / max(clip.duration, 0.001)))])
-    # The clip is already scaled to cover the output frame. These offsets are
-    # intentionally small so UI text remains readable.
     travel_x = max(0.0, clip.w - width) * 0.72
     travel_y = max(0.0, clip.h - height) * 0.72
 
@@ -205,6 +214,11 @@ def render(manifest: str | Path | dict[str, Any], output: str | Path) -> str:
     font_size = int(subtitle_cfg.get("font_size", 54))
     font_path = subtitle_cfg.get("font_path")
     subtitle_gap = float(subtitle_cfg.get("bottom_margin", 120))
+    highlight = subtitle_cfg.get("highlight_color", "#18C77A")
+    if isinstance(highlight, str) and highlight.startswith("#") and len(highlight) == 7:
+        highlight_rgba = tuple(int(highlight[i:i+2], 16) for i in (1, 3, 5)) + (255,)
+    else:
+        highlight_rgba = (24, 199, 122, 255)
 
     audio = AudioFileClip(audio_path) if audio_path else None
     total = audio.duration if audio else sum((s.duration or 0) for s in scenes)
@@ -227,17 +241,28 @@ def render(manifest: str | Path | dict[str, Any], output: str | Path) -> str:
     enhanced = read_enhanced_subtitles(enhanced_path) if enhanced_path else []
     srt = read_srt(srt_path) if srt_path else []
     caption_clips = []
-    items = enhanced or srt
-    for item in items:
-        if enhanced:
-            start, end, text = float(item["start_time"]), float(item["end_time"]), item.get("text", "")
-        else:
-            start, end, text = item["start"], item["end"], item["text"]
-        if not text:
-            continue
-        img = make_caption_image(text, width, font_size, font_path=font_path)
-        caption = ImageClip(img).with_start(start).with_duration(max(0.05, end - start))
-        caption_clips.append(caption.with_position(("center", height - img.height - subtitle_gap)))
+    if enhanced:
+        for item in enhanced:
+            words = item.get("words", [])
+            text = item.get("text", "").strip()
+            if not words or not text:
+                continue
+            # One caption state per spoken word gives true word-by-word highlighting.
+            for active_idx, word in enumerate(words):
+                start = float(word.get("start", item["start_time"]))
+                end = float(word.get("end", item["end_time"]))
+                img = make_caption_image(text, width, font_size, font_path=font_path,
+                                         active_word=active_idx, highlight_color=highlight_rgba)
+                caption = ImageClip(img).with_start(start).with_duration(max(0.04, end - start))
+                caption_clips.append(caption.with_position(("center", height - img.height - subtitle_gap)))
+    else:
+        for item in srt:
+            text = item["text"].strip()
+            if not text:
+                continue
+            img = make_caption_image(text, width, font_size, font_path=font_path)
+            caption = ImageClip(img).with_start(item["start"]).with_duration(max(0.05, item["end"] - item["start"]))
+            caption_clips.append(caption.with_position(("center", height - img.height - subtitle_gap)))
 
     final = CompositeVideoClip([timeline, *caption_clips], size=(width, height)).with_duration(total)
     if audio:
