@@ -1,54 +1,37 @@
-# Voice Cloning with Chatterbox TTS
+# PawanStudio Creator Voice Reference
 
-This directory is for reference audio files used for voice cloning with Chatterbox TTS.
+This directory stores authorized creator reference audio used for voice cloning/reference conditioning.
 
-## How to Use Voice Cloning
+## Canonical creator voice
 
-1. **Add Reference Audio Files**: Place your reference audio files in this directory
-   - Supported formats: `.wav`, `.mp3`, `.flac`, `.m4a`
-   - File name will become the voice name (e.g., `john.wav` → "john" voice)
+- **Profile:** Pawan Upadhyay — English creator voice
+- **Reference filename:** `pawan_english_reference.m4a`
+- **Source:** user-supplied recording in the ChatGPT production session
+- **Purpose:** voice-reference only; the sample's spoken script is NOT automatically reused as video narration
+- **Use:** future scripts are generated per project, then rendered using the authorized creator voice when the local TTS/voice-cloning runtime is available
+- **Substitution rule:** never silently replace the creator voice with an unrelated synthetic voice
 
-2. **Audio Quality Requirements**:
-   - **Duration**: 10-60 seconds of clean speech
-   - **Quality**: Clear, no background noise
-   - **Content**: Single speaker, natural speech (not singing)
-   - **Language**: Any language supported by the speaker
+## Required behavior
 
-3. **Select Cloned Voice**:
-   - In MoneyPrinterTurbo UI, select "Chatterbox TTS" as TTS server
-   - Choose the cloned voice from the dropdown (named after your file)
-   - The system will automatically use your reference audio for voice cloning
+1. Treat the creator reference as an identity/reference asset, not as a finished narration track.
+2. Generate a fresh project-specific script from research and the project's creative brief.
+3. Synthesize/render the new script using the authorized creator voice only when the configured voice engine is available.
+4. Match pacing, emphasis and pauses to the scene edit.
+5. Run audio QC and voice-provenance checks before delivery.
+6. If the reference audio is unavailable to the runtime, the video is BLOCKED rather than silently using generic TTS.
 
-## Example Files
+## Supported formats
 
-To get started, you can add audio files like:
-- `narrator.wav` - Professional narrator voice
-- `casual.mp3` - Casual conversational voice  
-- `british.wav` - British accent voice
-- `storyteller.flac` - Storytelling voice
+`.wav`, `.mp3`, `.flac`, `.m4a`
 
-## Tips for Best Results
+## Reference quality
 
-- **Consistent Quality**: Use the same recording setup for all files
-- **Clear Speech**: Avoid mumbling, background noise, or music
-- **Natural Pace**: Normal speaking speed works best
-- **Multiple Takes**: You can have multiple reference files for the same voice
-- **Test Different Voices**: Try different reference audios to find what works best
+Preferred reference: 10–60 seconds of clean, single-speaker natural speech with minimal background noise. The supplied English sample is approximately 20 seconds and is suitable as a reference candidate.
 
-## Technical Details
+## Privacy / repository rule
 
-- Chatterbox TTS uses your reference audio to clone the voice characteristics
-- The cloned voice will maintain the tone, accent, and speaking style of the reference
-- Processing happens locally on your machine (no data sent to external servers)
-- First generation with a new voice may take longer as models load
+Reference audio is creator-controlled material. Do not publish or redistribute it outside the configured private/local production environment unless explicitly authorized by the creator. A repository checkout must not assume that a reference file is public merely because its metadata is documented here.
 
-## Troubleshooting
+## Important
 
-If voice cloning isn't working:
-1. Check file format is supported (.wav, .mp3, .flac, .m4a)
-2. Ensure audio is clear and contains speech
-3. Try shorter reference audio (10-30 seconds)
-4. Restart MoneyPrinterTurbo after adding new files
-5. Check logs for any error messages
-
-For support, see the main MoneyPrinterTurbo documentation. 
+The reference recording is **not** the final narration for any particular video. PawanStudio must create project-specific narration from the current script and then apply the authorized voice reference.
