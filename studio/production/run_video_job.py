@@ -6,20 +6,23 @@ from urllib.parse import urlparse
 ROOT=Path(__file__).resolve().parents[2]; OUT=ROOT/"output/current"; OUT.mkdir(parents=True,exist_ok=True)
 def blocked(msg):
  (OUT/"qc_report.json").write_text(json.dumps({"status":"BLOCKED","reason":msg},indent=2),encoding="utf-8"); print(f"BLOCKED: {msg}"); raise SystemExit(2)
+def run(cmd,**kwargs):
+ env=os.environ.copy(); env["PYTHONPATH"]=str(ROOT)+os.pathsep+env.get("PYTHONPATH","")
+ return subprocess.run(cmd,cwd=ROOT,env=env,**kwargs)
 def main():
  p=argparse.ArgumentParser(); p.add_argument("--project-url",required=True); p.add_argument("--language",required=True); p.add_argument("--aspect-ratio",required=True); p.add_argument("--style",required=True); p.add_argument("--duration",required=True); p.add_argument("--free-mode",action="store_true"); a=p.parse_args(); u=urlparse(a.project_url)
  if u.scheme not in {"http","https"} or not u.netloc: blocked("project_url must be an HTTP(S) official source")
  request={"project_url":a.project_url,"language":a.language,"aspect_ratio":a.aspect_ratio,"style":a.style,"duration_seconds":int(a.duration),"free_mode":bool(a.free_mode),"fail_closed":os.getenv("PAWANSTUDIO_FAIL_CLOSED")=="true"}; (OUT/"request.json").write_text(json.dumps(request,indent=2),encoding="utf-8")
  cmd=[sys.executable,str(Path(__file__).with_name("free_pipeline.py")),"--project-url",a.project_url,"--language",a.language,"--aspect-ratio",a.aspect_ratio,"--style",a.style,"--duration",a.duration]
- subprocess.run(cmd,check=True)
+ run(cmd,check=True)
  video=OUT/"pawanstudio_master.mp4"; manifest=OUT/"asset_manifest.json"; report=OUT/"qc_report.json"; render_manifest=OUT/"render_manifest.json"
  if not video.exists() or not manifest.exists() or not render_manifest.exists(): blocked("render, provenance manifest, or render manifest missing")
- qc=[sys.executable,str(Path(__file__).with_name("qc.py")),str(video),str(manifest),str(report)]; result=subprocess.run(qc)
+ qc=[sys.executable,str(Path(__file__).with_name("qc.py")),str(video),str(manifest),str(report)]; result=run(qc)
  if result.returncode!=0:
-  subprocess.run([sys.executable,str(Path(__file__).with_name("self_heal.py")),str(report),str(render_manifest),str(OUT/"repair_log.json")],check=True)
+  run([sys.executable,str(Path(__file__).with_name("self_heal.py")),str(report),str(render_manifest),str(OUT/"repair_log.json")],check=True)
   render_code="from studio.engine import render; import sys; render(sys.argv[1],sys.argv[2])"
-  subprocess.run([sys.executable,"-c",render_code,str(render_manifest),str(video)],check=True)
-  result=subprocess.run(qc)
+  run([sys.executable,"-c",render_code,str(render_manifest),str(video)],check=True)
+  result=run(qc)
  if result.returncode!=0: print("FINAL STATUS: BLOCKED — forensic QC did not PASS"); raise SystemExit(2)
  print("FINAL STATUS: PASS")
 if __name__=="__main__": main()
