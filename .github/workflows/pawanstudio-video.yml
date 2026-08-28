@@ -72,6 +72,10 @@ jobs:
           pip install -r studio/production/free_requirements_chatterbox.txt
           python -m playwright install --with-deps chromium
 
+      - name: Verify Chatterbox multilingual backend
+        run: |
+          python -c "from chatterbox.mtl_tts import ChatterboxMultilingualTTS; import chatterbox; print('Chatterbox multilingual import: PASS')"
+
       - name: Run PawanStudio production contract
         env:
           PROJECT_URL: ${{ inputs.project_url }}
