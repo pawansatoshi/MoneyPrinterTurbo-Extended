@@ -1,11 +1,13 @@
 {
   "profile": "pawan_english_creator",
   "language": "en",
-  "reference_filename": "pawan_english_reference.m4a",
+  "reference_filename": "pawan_english_reference.mp3",
   "purpose": "authorized voice reference only",
   "source": "user-supplied recording",
   "reuse_sample_script_as_narration": false,
-  "required_behavior": "Generate a fresh project-specific script and render it using the authorized creator voice when the configured voice runtime is available.",
+  "runtime": "GitHub Actions free-first production pipeline",
+  "model": "Coqui XTTS v2 local inference",
+  "required_behavior": "Generate a fresh project-specific script and render it using the authorized creator voice reference when the runtime is available.",
   "missing_reference_behavior": "BLOCK voice-authenticated production; never silently substitute unrelated robotic TTS.",
   "privacy": "creator-controlled reference audio; do not redistribute without explicit authorization"
 }
