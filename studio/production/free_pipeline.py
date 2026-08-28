@@ -3,9 +3,9 @@ from __future__ import annotations
 import argparse, hashlib, json, os, re, subprocess, sys, time
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
+import requests
+from bs4 import BeautifulSoup
 ROOT=Path(__file__).resolve().parents[2]
-# GitHub Actions invokes this file by absolute path; explicitly expose the repo root
-# so namespace-package imports such as studio.production.visual_director work reliably.
 sys.path.insert(0,str(ROOT))
 OUT=ROOT/"output/current"; ASSETS=OUT/"official_assets"; CARDS=OUT/"editorial_cards"
 OUT.mkdir(parents=True,exist_ok=True); ASSETS.mkdir(parents=True,exist_ok=True); CARDS.mkdir(parents=True,exist_ok=True)
