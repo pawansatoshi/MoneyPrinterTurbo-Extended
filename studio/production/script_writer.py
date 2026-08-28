@@ -22,8 +22,9 @@ def main():
  tok=AutoTokenizer.from_pretrained(MODEL); model=AutoModelForCausalLM.from_pretrained(MODEL)
  msgs=[{"role":"system","content":"You write accurate educational video narration and never invent facts."},{"role":"user","content":prompt}]
  inp=tok.apply_chat_template(msgs,add_generation_prompt=True,return_tensors="pt")
- out_ids=model.generate(inp,max_new_tokens=max(220,min(700,duration*3)),do_sample=True,temperature=0.65,top_p=0.9)
- text=tok.decode(out_ids[0][inp.shape[-1]:],skip_special_tokens=True).strip()
+ input_ids=inp.input_ids if hasattr(inp,"input_ids") else inp
+ out_ids=model.generate(input_ids=input_ids,max_new_tokens=max(220,min(700,duration*3)),do_sample=True,temperature=0.65,top_p=0.9)
+ text=tok.decode(out_ids[0][input_ids.shape[-1]:],skip_special_tokens=True).strip()
  if not text: raise SystemExit("Local script model returned empty output")
  out.write_text(text,encoding="utf-8")
 if __name__=="__main__": main()
