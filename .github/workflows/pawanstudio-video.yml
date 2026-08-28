@@ -1,0 +1,87 @@
+name: PawanStudio Video Factory
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_url:
+        description: 'Official project website URL'
+        required: true
+        type: string
+      language:
+        description: 'Narration language'
+        required: true
+        default: 'English'
+        type: choice
+        options: [English, Hindi, Hinglish]
+      aspect_ratio:
+        description: 'Output aspect ratio'
+        required: true
+        default: '16:9'
+        type: choice
+        options: ['16:9', '9:16', '1:1']
+      style:
+        description: 'Creative direction'
+        required: true
+        default: 'cinematic educational'
+        type: string
+      duration:
+        description: 'Target duration in seconds'
+        required: true
+        default: '60'
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: '1'
+  PAWANSTUDIO_FREE_MODE: 'true'
+  PAWANSTUDIO_FAIL_CLOSED: 'true'
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install lightweight production dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f studio/requirements.txt ]; then pip install -r studio/requirements.txt; fi
+
+      - name: Run PawanStudio production contract
+        env:
+          PROJECT_URL: ${{ inputs.project_url }}
+          LANGUAGE: ${{ inputs.language }}
+          ASPECT_RATIO: ${{ inputs.aspect_ratio }}
+          STYLE: ${{ inputs.style }}
+          DURATION: ${{ inputs.duration }}
+        run: |
+          python studio/production/run_video_job.py \
+            --project-url "$PROJECT_URL" \
+            --language "$LANGUAGE" \
+            --aspect-ratio "$ASPECT_RATIO" \
+            --style "$STYLE" \
+            --duration "$DURATION" \
+            --free-mode
+
+      - name: Upload final artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pawanstudio-video-${{ github.run_number }}
+          path: |
+            output/**/*.mp4
+            output/**/*.json
+            output/**/*.md
+          if-no-files-found: warn
+          retention-days: 7
