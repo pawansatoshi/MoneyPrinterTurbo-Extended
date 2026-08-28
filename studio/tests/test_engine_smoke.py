@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Fast regression test for the MoviePy/PIL subtitle rendering path."""
+
 import json
 import math
 import wave
