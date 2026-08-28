@@ -56,13 +56,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cache/tts
             ~/.cache/huggingface
             ~/.cache/torch
-            ~/.local/share/tts
-          key: pawanstudio-models-${{ runner.os }}-${{ hashFiles('studio/production/free_requirements.txt') }}
+            ~/.cache/chatterbox
+          key: pawanstudio-chatterbox-${{ runner.os }}-${{ hashFiles('studio/production/free_requirements_chatterbox.txt') }}
           restore-keys: |
-            pawanstudio-models-${{ runner.os }}-
+            pawanstudio-chatterbox-${{ runner.os }}-
 
       - name: Install production dependencies
         run: |
@@ -70,7 +69,7 @@ jobs:
           sudo apt-get install -y ffmpeg
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -r studio/production/free_requirements.txt
+          pip install -r studio/production/free_requirements_chatterbox.txt
           python -m playwright install --with-deps chromium
 
       - name: Run PawanStudio production contract
@@ -81,7 +80,7 @@ jobs:
           STYLE: ${{ inputs.style }}
           DURATION: ${{ inputs.duration }}
         run: |
-          python studio/production/run_video_job.py \
+          python studio/production/run_video_job_chatterbox.py \
             --project-url "$PROJECT_URL" \
             --language "$LANGUAGE" \
             --aspect-ratio "$ASPECT_RATIO" \
