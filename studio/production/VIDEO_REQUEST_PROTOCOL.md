@@ -38,6 +38,15 @@ If an authorized creator photo/video/voice exists, preserve identity and use the
 
 Creator-photo enhancement MUST preserve identity. If wardrobe transformation is supported, preserve face/identity and use project-appropriate styling. Any generated creator transformation must pass identity-consistency QC before release.
 
+### 4A. CANONICAL CREATOR VOICE REFERENCE
+The authorized English creator voice reference is documented at `reference_audio/pawan_english_reference.manifest.json` and the corresponding reference filename is `reference_audio/pawan_english_reference.m4a`.
+
+The reference recording is used ONLY to condition/identify the creator voice. Its spoken sample text must NOT be copied as a finished narration track unless the user explicitly asks for that recording itself. For every new video, generate a fresh project-specific script from current research and render that script through the configured authorized voice workflow.
+
+If the authorized reference audio is not physically available to the runtime, voice-authenticated production is BLOCKED. Do not silently fall back to unrelated generic TTS. A project may use another explicitly approved voice only when its project rules say so.
+
+The reference is creator-controlled material and must not be redistributed outside the configured production environment without explicit authorization.
+
 ## 5. Creative direction
 Never default to `topic -> stock keywords -> photos -> TTS -> captions -> slideshow`. Generate and score multiple concepts on originality, project relevance, evidence, visual potential, narrative strength, retention, creator fit and platform fit. Identify overused treatments when reference/research adapters permit and deliberately choose a differentiated treatment.
 
