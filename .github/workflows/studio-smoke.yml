@@ -23,4 +23,12 @@ jobs:
         with:
           python-version: '3.11'
       - name: Compile Studio Python modules
-        run: python -m py_compile studio/*.py app/controllers/v1/studio.py app/router.py app/asgi.py
+        run: python -m py_compile studio/*.py studio/production/*.py studio/tests/test_engine_smoke.py app/controllers/v1/studio.py app/router.py app/asgi.py
+      - name: Install renderer smoke dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip
+          pip install 'moviepy==2.1.2' 'pillow>=9.0.0' 'numpy<3' 'loguru==0.7.3'
+      - name: Run renderer smoke test
+        run: python -m pytest -q studio/tests/test_engine_smoke.py
