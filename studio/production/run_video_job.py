@@ -12,12 +12,14 @@ def main():
  request={"project_url":a.project_url,"language":a.language,"aspect_ratio":a.aspect_ratio,"style":a.style,"duration_seconds":int(a.duration),"free_mode":bool(a.free_mode),"fail_closed":os.getenv("PAWANSTUDIO_FAIL_CLOSED")=="true"}; (OUT/"request.json").write_text(json.dumps(request,indent=2),encoding="utf-8")
  cmd=[sys.executable,str(Path(__file__).with_name("free_pipeline.py")),"--project-url",a.project_url,"--language",a.language,"--aspect-ratio",a.aspect_ratio,"--style",a.style,"--duration",a.duration]
  subprocess.run(cmd,check=True)
- video=OUT/"pawanstudio_master.mp4"; manifest=OUT/"asset_manifest.json"; report=OUT/"qc_report.json"
- if not video.exists() or not manifest.exists(): blocked("render or asset manifest missing")
+ video=OUT/"pawanstudio_master.mp4"; manifest=OUT/"asset_manifest.json"; report=OUT/"qc_report.json"; render_manifest=OUT/"render_manifest.json"
+ if not video.exists() or not manifest.exists() or not render_manifest.exists(): blocked("render, provenance manifest, or render manifest missing")
  qc=[sys.executable,str(Path(__file__).with_name("qc.py")),str(video),str(manifest),str(report)]; result=subprocess.run(qc)
  if result.returncode!=0:
-  heal=[sys.executable,str(Path(__file__).with_name("self_heal.py")),str(report),str(OUT/"render_manifest.json"),str(OUT/"repair_log.json")]
-  subprocess.run(heal,check=True); subprocess.run(cmd,check=True); result=subprocess.run(qc)
+  subprocess.run([sys.executable,str(Path(__file__).with_name("self_heal.py")),str(report),str(render_manifest),str(OUT/"repair_log.json")],check=True)
+  render_code="from studio.engine import render; import sys; render(sys.argv[1],sys.argv[2])"
+  subprocess.run([sys.executable,"-c",render_code,str(render_manifest),str(video)],check=True)
+  result=subprocess.run(qc)
  if result.returncode!=0: print("FINAL STATUS: BLOCKED — forensic QC did not PASS"); raise SystemExit(2)
  print("FINAL STATUS: PASS")
 if __name__=="__main__": main()
