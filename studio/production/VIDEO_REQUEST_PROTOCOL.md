@@ -20,7 +20,7 @@ If an official asset is required but cannot be retrieved/verified, production MU
 ## 2B. SOURCE/ASSET ISOLATION
 Project assets and creator assets MUST be stored in separate namespaces/manifests. Conversation-uploaded project screenshots must be quarantined from automatic project-asset selection. The asset selector MUST reject files classified as `user_project_screenshot`, `chat_screenshot`, `previous_render`, or `unknown_provenance` for branded product/UI scenes unless the user explicitly authorizes that exact file.
 
-Before rendering, run a provenance preflight. Every planned branded asset must be classified as `official_source_asset`, `user_creator_asset`, `conceptual_asset`, or `blocked`. Any unclassified branded asset = BLOCK.
+Before rendering, run a provenance preflight. Every planned branded asset must be classified as `official_source_asset`, `user_creator_asset`, `derived_official_asset`, `conceptual_asset`, or `blocked`. Any unclassified branded asset = BLOCK.
 
 ## 2C. OFFICIAL CAPTURE VERIFICATION
 A webpage screenshot is not considered official merely because it visually resembles the official site. The runtime MUST retain the source URL and capture metadata and MUST verify that the captured content came from the intended first-party domain. If the browser/research adapter cannot prove source provenance, the capture cannot be used as an official product screenshot.
@@ -39,11 +39,11 @@ If an authorized creator photo/video/voice exists, preserve identity and use the
 Creator-photo enhancement MUST preserve identity. If wardrobe transformation is supported, preserve face/identity and use project-appropriate styling. Any generated creator transformation must pass identity-consistency QC before release.
 
 ### 4A. CANONICAL CREATOR VOICE REFERENCE
-The authorized English creator voice reference is documented at `reference_audio/pawan_english_reference.manifest.json` and the corresponding reference filename is `reference_audio/pawan_english_reference.m4a`.
+The authorized English creator voice reference is `reference_audio/pawan_english_reference.mp3`; the authorized Hindi creator voice reference is `reference_audio/pawan_hindi_reference.mp3`. Their manifests are the canonical profiles.
 
 The reference recording is used ONLY to condition/identify the creator voice. Its spoken sample text must NOT be copied as a finished narration track unless the user explicitly asks for that recording itself. For every new video, generate a fresh project-specific script from current research and render that script through the configured authorized voice workflow.
 
-If the authorized reference audio is not physically available to the runtime, voice-authenticated production is BLOCKED. Do not silently fall back to unrelated generic TTS. A project may use another explicitly approved voice only when its project rules say so.
+The free-first production runtime uses local/open voice-cloning inference (currently XTTS v2) on the GitHub Actions runner. If the authorized reference audio is not physically available to the runtime, voice-authenticated production is BLOCKED. Do not silently fall back to unrelated generic TTS.
 
 The reference is creator-controlled material and must not be redistributed outside the configured production environment without explicit authorization.
 
@@ -84,7 +84,7 @@ The forensic analyzer MUST detect black frames, near-black intervals, frozen fra
 Every material factual claim must map to a source in the claims/evidence ledger. Time-sensitive claims must have current-source verification. Financial rates, liquidity, APY, balances, launch dates, availability and similar volatile facts MUST carry retrieval timestamps and MUST NOT be presented as current if stale. Unsupported claims = BLOCK.
 
 ### 7C. FINAL TIMELINE PROVENANCE POLICY
-QC must inspect the actual rendered timeline and map each branded/project visual back to the asset manifest. If any project screenshot is not registered as `official_source_asset` with a verified first-party source, the official-asset gate FAILS. Visual similarity is insufficient.
+QC must inspect the actual rendered timeline and map each branded/project visual back to the asset manifest. If any project screenshot is not registered as `official_source_asset` with a verified first-party source, or as `derived_official_asset` with a deterministic link to a verified official source hash, the official-asset gate FAILS. Visual similarity is insufficient.
 
 ### 7D. VIEWER-FACING DEBUG/PROVENANCE SCAN
 The final rendered frames MUST be scanned for accidental internal labels including `OFFICIAL SCREENSHOT`, `OFFICIAL ASSET`, `SOURCE`, `ASSET ID`, debug strings, file paths and hashes. Any such label outside an intentionally editorial context = FAIL and must be removed before release.
@@ -116,10 +116,17 @@ User project constraints override generic defaults. Example: `use only official 
 Drafts/previews only when explicitly requested. A normal video request means continue through production and QC until genuinely ready or report a blocking runtime dependency. Never label an unverified draft final.
 
 ## 12. Release rule for official screenshots
-For any project such as Sats Terminal, the production manifest MUST distinguish `official_source_asset`, `user_creator_asset`, and `conceptual_asset`. The final timeline may contain a product screenshot only if its manifest entry is `official_source_asset` with a verified first-party URL. A file originating from conversation uploads MUST be rejected as a product screenshot unless the user explicitly authorizes that exact file. QC must compare the final media hash/reference against the manifest and fail on mismatch.
+For any project such as Sats Terminal, the production manifest MUST distinguish `official_source_asset`, `user_creator_asset`, `derived_official_asset`, and `conceptual_asset`. The final timeline may contain a product screenshot only if its manifest entry is `official_source_asset` with a verified first-party URL, or a `derived_official_asset` that carries the exact source asset hash. A file originating from conversation uploads MUST be rejected as a product screenshot unless the user explicitly authorizes that exact file. QC must compare the final media hash/reference against the manifest and fail on mismatch.
 
 ## 13. Video-request execution contract
 Whenever the user asks to make a video, the runtime MUST execute the complete pipeline and MUST NOT stop after generating a storyboard or draft. It must inspect its own rendered output before delivery. If any issue is found, it must self-heal and repeat the complete QC cycle. Delivery is permitted only after an evidenced PASS.
 
 ## 14. NEVER-CERTIFY-WITHOUT-EVIDENCE
 The assistant/runtime MUST NOT claim that a video was checked, rendered, repaired, source-verified, or passed QC unless the corresponding runtime evidence exists for that exact render/version. If evidence is unavailable, report `BLOCKED` rather than infer success from configuration or prior runs.
+
+## 15. FREE GITHUB FACTORY CONTRACT
+The canonical execution path is GitHub Actions, not ad-hoc local rendering by the assistant. The workflow must use standard GitHub-hosted runners in the public repository, open-source/local dependencies, model caching and workflow artifacts. No paid API or paid stock provider is required for the baseline pipeline. If a requested feature needs paid infrastructure or unavailable GPU compute, the workflow must report BLOCKED rather than silently downgrade quality.
+
+The factory must produce the actual MP4 plus `request.json`, `research.json`, `script.txt`, `official_asset_manifest.json`, `asset_manifest.json`, `render_manifest.json`, `enhanced_subtitles.json`, `qc_report.json` and repair evidence as workflow artifacts.
+
+The factory is responsible for executing research, source capture, script generation, authorized voice synthesis, editorial visual construction, rendering and QC. The assistant should trigger/inspect the GitHub production workflow rather than independently pretending to be the production renderer.
