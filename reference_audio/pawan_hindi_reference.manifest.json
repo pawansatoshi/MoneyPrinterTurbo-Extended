@@ -1,0 +1,11 @@
+{
+  "profile": "pawan_hindi_creator",
+  "language": "hi",
+  "reference_filename": "pawan_hindi_reference.mp3",
+  "purpose": "authorized voice reference only",
+  "source": "user-supplied recording",
+  "reuse_sample_script_as_narration": false,
+  "required_behavior": "Generate a fresh project-specific script and render it using the authorized creator voice when the configured voice runtime is available.",
+  "missing_reference_behavior": "BLOCK voice-authenticated production; never silently substitute unrelated robotic TTS.",
+  "privacy": "creator-controlled reference audio; do not redistribute without explicit authorization"
+}
