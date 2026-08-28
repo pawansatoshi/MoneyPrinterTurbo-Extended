@@ -41,7 +41,7 @@ env:
 jobs:
   production:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,11 +52,25 @@ jobs:
           python-version: '3.11'
           cache: pip
 
-      - name: Install lightweight production dependencies
+      - name: Cache model downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/tts
+            ~/.cache/huggingface
+            ~/.cache/torch
+          key: pawanstudio-models-${{ runner.os }}-${{ hashFiles('studio/production/free_requirements.txt') }}
+          restore-keys: |
+            pawanstudio-models-${{ runner.os }}-
+
+      - name: Install production dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f studio/requirements.txt ]; then pip install -r studio/requirements.txt; fi
+          pip install -r requirements.txt
+          pip install -r studio/production/free_requirements.txt
+          python -m playwright install --with-deps chromium
 
       - name: Run PawanStudio production contract
         env:
@@ -74,14 +88,16 @@ jobs:
             --duration "$DURATION" \
             --free-mode
 
-      - name: Upload final artifacts
+      - name: Upload production evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pawanstudio-video-${{ github.run_number }}
           path: |
             output/**/*.mp4
+            output/**/*.wav
             output/**/*.json
+            output/**/*.txt
             output/**/*.md
           if-no-files-found: warn
           retention-days: 7
