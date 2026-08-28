@@ -29,6 +29,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
           python -m pip install --upgrade pip
-          pip install 'moviepy==2.1.2' 'pillow>=9.0.0' 'numpy<3' 'loguru==0.7.3'
+          pip install 'moviepy==2.1.2' 'pillow>=9.0.0' 'numpy<3' 'loguru==0.7.3' pytest
       - name: Run renderer smoke test
         run: python -m pytest -q studio/tests/test_engine_smoke.py
