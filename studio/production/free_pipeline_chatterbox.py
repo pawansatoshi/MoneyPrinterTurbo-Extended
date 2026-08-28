@@ -60,7 +60,8 @@ def subtitles(audio,language):
  out=OUT/"enhanced_subtitles.json"; run([sys.executable,str(Path(__file__).with_name("subtitle_sync.py")),str(audio),str(out),{"english":"en","hindi":"hi","hinglish":"en"}.get(language.lower(),"en")],check=True); return out
 def manifest(cards,audio,subs,aspect,duration,style):
  res={"16:9":[1920,1080],"1:1":[1080,1080],"9:16":[1080,1920]}[aspect]; per=max(3.0,float(duration)/max(1,len(cards))); cams=["push_in","pan_right","pan_left","drift_left","drift_right","pull_out"]
- scenes=[{"asset":str(ROOT/x["asset"]),"duration":per,"camera":cams[i%len(cams)],"transition":"fade","crop":"cover","role":"evidence_card"} for i,x in enumerate(cards)]
+ # Keep render scenes strictly compatible with studio.engine.Scene. Editorial metadata stays in asset_manifest.json.
+ scenes=[{"asset":str(ROOT/x["asset"]),"duration":per,"camera":cams[i%len(cams)],"transition":"fade","crop":"cover"} for i,x in enumerate(cards)]
  m={"resolution":res,"fps":30,"bitrate":"9000k","audio_bitrate":"256k","crf":18,"seed":42,"style":style,"scenes":scenes,"audio":str(audio),"enhanced_subtitle":str(subs),"subtitles":{"font_size":54 if aspect=="16:9" else 50,"bottom_margin":90}}
  p=OUT/"render_manifest.json"; p.write_text(json.dumps(m,indent=2),encoding="utf-8"); return p
 def main():
