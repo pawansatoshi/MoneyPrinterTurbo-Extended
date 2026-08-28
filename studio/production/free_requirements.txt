@@ -1,5 +1,5 @@
 beautifulsoup4==4.13.4
 playwright==1.52.0
-TTS==0.22.0
+chatterbox-tts==0.1.7
 soundfile==0.13.1
 numpy==1.26.4
