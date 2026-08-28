@@ -1,4 +1,4 @@
-"""Free-first PawanStudio production pipeline: research -> official capture -> local creative writing -> editorial visual direction -> creator voice -> word subtitles -> render."""
+"""Free-first PawanStudio production pipeline: research -> evidence -> official capture -> local creative writing -> editorial visual direction -> creator voice -> word subtitles -> render."""
 from __future__ import annotations
 import argparse, hashlib, json, re, subprocess, sys, time
 from pathlib import Path
@@ -60,6 +60,6 @@ def manifest(cards,audio,subs,aspect,duration,style):
  p=OUT/"render_manifest.json"; p.write_text(json.dumps(m,indent=2),encoding="utf-8"); return p
 def main():
  ap=argparse.ArgumentParser(); ap.add_argument("--project-url",required=True); ap.add_argument("--language",required=True); ap.add_argument("--aspect-ratio",required=True); ap.add_argument("--style",required=True); ap.add_argument("--duration",required=True); a=ap.parse_args()
- rows,pages=research(a.project_url); write_script(a.language,a.duration); reg=capture(pages); cards=make_visuals(reg); audio=voice(a.language); subs=subtitles(audio,a.language); m=manifest(cards,audio,subs,a.aspect_ratio,a.duration,a.style)
+ rows,pages=research(a.project_url); subprocess.run([sys.executable,str(Path(__file__).with_name("evidence_ledger.py")),str(OUT/"research.json"),str(OUT/"evidence_ledger.json")],check=True); write_script(a.language,a.duration); reg=capture(pages); cards=make_visuals(reg); audio=voice(a.language); subs=subtitles(audio,a.language); m=manifest(cards,audio,subs,a.aspect_ratio,a.duration,a.style)
  from studio.engine import render; out=OUT/"pawanstudio_master.mp4"; render(m,out); print(out)
 if __name__=="__main__": main()
