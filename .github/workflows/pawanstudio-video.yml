@@ -52,13 +52,14 @@ jobs:
           python-version: '3.11'
           cache: pip
 
-      - name: Cache model downloads
+      - name: Cache local model downloads
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/tts
             ~/.cache/huggingface
             ~/.cache/torch
+            ~/.local/share/tts
           key: pawanstudio-models-${{ runner.os }}-${{ hashFiles('studio/production/free_requirements.txt') }}
           restore-keys: |
             pawanstudio-models-${{ runner.os }}-
