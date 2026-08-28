@@ -1,69 +1,40 @@
-"""Free-first PawanStudio GitHub Actions entry point.
+"""GitHub Actions entry point for the free-first PawanStudio factory.
 
-This runner is intentionally fail-closed. It orchestrates the repository's
-existing studio modules when available and writes auditable manifests. It does
-not fabricate official project assets or silently substitute a voice.
+It executes the real pipeline, then the forensic gate. It never converts a
+missing dependency or failed QC into a PASS.
 """
 from __future__ import annotations
 import argparse, json, os, subprocess, sys
 from pathlib import Path
 from urllib.parse import urlparse
+ROOT=Path(__file__).resolve().parents[2]; OUT=ROOT/"output/current"; OUT.mkdir(parents=True,exist_ok=True)
 
-ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "output" / "current"
-OUT.mkdir(parents=True, exist_ok=True)
+def blocked(msg):
+    (OUT/"qc_report.json").write_text(json.dumps({"status":"BLOCKED","reason":msg},indent=2),encoding="utf-8")
+    print(f"BLOCKED: {msg}"); raise SystemExit(2)
 
+def main():
+    p=argparse.ArgumentParser(); p.add_argument("--project-url",required=True); p.add_argument("--language",required=True); p.add_argument("--aspect-ratio",required=True); p.add_argument("--style",required=True); p.add_argument("--duration",required=True); p.add_argument("--free-mode",action="store_true"); a=p.parse_args()
+    u=urlparse(a.project_url)
+    if u.scheme not in {"http","https"} or not u.netloc: blocked("project_url must be an HTTP(S) official source")
+    request={"project_url":a.project_url,"language":a.language,"aspect_ratio":a.aspect_ratio,"style":a.style,"duration_seconds":int(a.duration),"free_mode":bool(a.free_mode),"fail_closed":os.getenv("PAWANSTUDIO_FAIL_CLOSED")=="true"}
+    (OUT/"request.json").write_text(json.dumps(request,indent=2),encoding="utf-8")
+    cmd=[sys.executable,str(Path(__file__).with_name("free_pipeline.py")),"--project-url",a.project_url,"--language",a.language,"--aspect-ratio",a.aspect_ratio,"--style",a.style,"--duration",a.duration]
+    subprocess.run(cmd,check=True)
+    video=OUT/"pawanstudio_master.mp4"; manifest=OUT/"asset_manifest.json"; report=OUT/"qc_report.json"
+    if not video.exists() or not manifest.exists(): blocked("render or asset manifest missing")
+    # One automatic healing pass is reserved for renderer-level re-render. A
+    # failed forensic gate is never hidden; it remains FAIL/BLOCKED for action logs.
+    qc=[sys.executable,str(Path(__file__).with_name("qc.py")),str(video),str(manifest),str(report)]
+    result=subprocess.run(qc)
+    if result.returncode!=0:
+        # Re-render once from the same verified source manifest. This exercises
+        # the mandatory self-healing loop without inventing or substituting assets.
+        subprocess.run(cmd,check=True)
+        result=subprocess.run(qc)
+    if result.returncode!=0:
+        print("FINAL STATUS: BLOCKED — forensic QC did not PASS")
+        raise SystemExit(2)
+    print("FINAL STATUS: PASS")
 
-def fail(msg: str) -> None:
-    report = {"status": "BLOCKED", "reason": msg}
-    (OUT / "qc_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
-    print(f"BLOCKED: {msg}")
-    raise SystemExit(2)
-
-
-def main() -> None:
-    p = argparse.ArgumentParser()
-    p.add_argument("--project-url", required=True)
-    p.add_argument("--language", required=True)
-    p.add_argument("--aspect-ratio", required=True)
-    p.add_argument("--style", required=True)
-    p.add_argument("--duration", required=True)
-    p.add_argument("--free-mode", action="store_true")
-    a = p.parse_args()
-
-    parsed = urlparse(a.project_url)
-    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-        fail("project_url must be an HTTP(S) official source")
-
-    # Keep all job intent auditable before invoking the renderer.
-    request = {
-        "project_url": a.project_url,
-        "language": a.language,
-        "aspect_ratio": a.aspect_ratio,
-        "style": a.style,
-        "duration_seconds": int(a.duration),
-        "free_mode": bool(a.free_mode),
-        "fail_closed": os.getenv("PAWANSTUDIO_FAIL_CLOSED") == "true",
-    }
-    (OUT / "request.json").write_text(json.dumps(request, indent=2), encoding="utf-8")
-
-    # Do not claim a complete render when the repository has not exposed its
-    # production engine entry point. This makes the GitHub Action honest.
-    candidates = [
-        ROOT / "studio" / "engine.py",
-        ROOT / "studio" / "pipeline.py",
-        ROOT / "studio" / "production" / "pipeline.py",
-    ]
-    engine = next((x for x in candidates if x.exists()), None)
-    if engine is None:
-        fail("No production-engine entry point found; connect the existing studio renderer before rendering")
-
-    # Existing engine contracts vary across forks. Never guess CLI arguments.
-    # A future adapter can be added here once the repository exposes a stable
-    # callable/CLI contract. Until then, fail closed instead of generating a
-    # misleading or unverified video.
-    fail(f"Production adapter for {engine.relative_to(ROOT)} is not declared")
-
-
-if __name__ == "__main__":
-    main()
+if __name__=="__main__": main()
